@@ -1,4 +1,4 @@
 name: YoctoChat
-main: eu.hiddenite.YoctoChatPlugin
+main: eu.hiddenite.yoctochat.YoctoChatPlugin
 version: 1.0.0
 author: Hiddenite

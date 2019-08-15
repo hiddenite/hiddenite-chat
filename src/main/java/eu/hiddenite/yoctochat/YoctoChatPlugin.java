@@ -1,4 +1,4 @@
-package eu.hiddenite;
+package eu.hiddenite.yoctochat;
 
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -6,25 +6,26 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ChatEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
-import net.md_5.bungee.config.Configuration;
-import net.md_5.bungee.config.ConfigurationProvider;
-import net.md_5.bungee.config.YamlConfiguration;
 import net.md_5.bungee.event.EventHandler;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.util.Collection;
 
 public class YoctoChatPlugin extends Plugin implements Listener {
-    private String chatMessageFormat;
+    private Configuration config = new Configuration();
 
     @Override
     public void onEnable() {
-        loadConfiguration();
+        if (!config.load(this)) {
+            return;
+        }
+
+        if (config.chatFormats.size() == 0) {
+            getLogger().warning("No chat format found in the configuration.");
+            return;
+        }
 
         getProxy().getPluginManager().registerListener(this, this);
+        getProxy().getPluginManager().registerCommand(this, new PrivateMessageCommand(config));
     }
 
     @EventHandler
@@ -40,8 +41,11 @@ public class YoctoChatPlugin extends Plugin implements Listener {
         ProxiedPlayer sender = (ProxiedPlayer)event.getSender();
         Collection<ProxiedPlayer> allPlayers = getProxy().getPlayers();
 
+        String chatFormat = getChatFormat(sender);
+
         String message = event.getMessage();
-        String formattedMessage = chatMessageFormat
+        String formattedMessage = chatFormat
+                .replace("{NAME}", sender.getName())
                 .replace("{NAME}", sender.getName())
                 .replace("{DISPLAY_NAME}", sender.getDisplayName())
                 .replace("{MESSAGE}", message);
@@ -56,26 +60,14 @@ public class YoctoChatPlugin extends Plugin implements Listener {
         event.setCancelled(true);
     }
 
-    private void loadConfiguration() {
-        if (!getDataFolder().exists()) {
-            getDataFolder().mkdir();
-        }
-
-        File file = new File(getDataFolder(), "config.yml");
-        if (!file.exists()) {
-            try (InputStream in = getResourceAsStream("config.yml")) {
-                Files.copy(in, file.toPath());
-            } catch (IOException e) {
-                e.printStackTrace();
+    private String getChatFormat(ProxiedPlayer player) {
+        String last = null;
+        for (String key : config.chatFormats.keySet()) {
+            last = key;
+            if (player.hasPermission("yoctochat." + key)) {
+                return config.chatFormats.get(key);
             }
         }
-
-        try {
-            Configuration configuration = ConfigurationProvider.getProvider(YamlConfiguration.class).load(new File(getDataFolder(), "config.yml"));
-
-            chatMessageFormat = configuration.getString("chat_format");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        return config.chatFormats.get(last);
     }
 }

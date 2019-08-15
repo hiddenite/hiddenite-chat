@@ -1,1 +1,21 @@
-chat_format: "<{DISPLAY_NAME}> {MESSAGE}"
+# Chat formats, based on permissions.
+chat:
+  # "admin" and "vip" are examples, you can use anything you want instead.
+  # Chat format that requires the "yoctochat.admin" permission.
+  admin: "§c<[Admin] {DISPLAY_NAME}> §r{MESSAGE}"
+  # Chat format that requires the "yoctochat.vip" permission.
+  vip: "§6<[VIP] {DISPLAY_NAME}> §r{MESSAGE}"
+
+  # The last entry is the default chat format, used by everyone else.
+  default: "<{DISPLAY_NAME}> {MESSAGE}"
+
+# Private messages configuration.
+private_messages:
+  # Sent when the command is used without enough arguments.
+  usage: "/msg <player> <message>"
+  # Message sent to the sender.
+  sent: "§7to {DISPLAY_NAME}: {MESSAGE}"
+  # Message sent to the receiver.
+  received: "§7from {DISPLAY_NAME}: {MESSAGE}"
+  # Message sent to the sender when the receiver is offline.
+  error_not_found: "§cPlayer {RECEIVER} not found."
