@@ -15,7 +15,9 @@ public class Configuration {
     public String pmSentFormat;
     public String pmReceivedFormat;
     public String pmUsage;
+    public String pmReplyUsage;
     public String pmErrorNotFound;
+    public String pmErrorNoReply;
 
     public boolean load(Plugin plugin) {
         if (!plugin.getDataFolder().exists()) {
@@ -43,9 +45,11 @@ public class Configuration {
             }
 
             pmUsage = configuration.getString("private_messages.usage");
+            pmReplyUsage = configuration.getString("private_messages.reply_usage");
             pmSentFormat = configuration.getString("private_messages.sent");
             pmReceivedFormat = configuration.getString("private_messages.received");
             pmErrorNotFound = configuration.getString("private_messages.error_not_found");
+            pmErrorNoReply = configuration.getString("private_messages.error_no_reply");
 
         } catch (IOException e) {
             e.printStackTrace();

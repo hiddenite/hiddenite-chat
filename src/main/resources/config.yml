@@ -13,9 +13,13 @@ chat:
 private_messages:
   # Sent when the command is used without enough arguments.
   usage: "/msg <player> <message>"
+  # Sent when the reply command is used with no argument.
+  reply_usage: "/r <message>"
   # Message sent to the sender.
   sent: "§7to {DISPLAY_NAME}: {MESSAGE}"
   # Message sent to the receiver.
   received: "§7from {DISPLAY_NAME}: {MESSAGE}"
   # Message sent to the sender when the receiver is offline.
   error_not_found: "§cPlayer {RECEIVER} not found."
+  # Message sent to the sender when there is no one to reply to.
+  error_no_reply: "§cNo one to reply to."

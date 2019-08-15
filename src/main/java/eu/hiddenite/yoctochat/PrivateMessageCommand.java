@@ -13,11 +13,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class PrivateMessageCommand extends Command implements TabExecutor {
+    private YoctoChatPlugin plugin;
     private Configuration config;
 
-    public PrivateMessageCommand(Configuration config) {
+    PrivateMessageCommand(YoctoChatPlugin plugin) {
         super("msg", null, "w", "m", "tell", "t");
-        this.config = config;
+        this.plugin = plugin;
+        config = plugin.getConfig();
     }
 
     @Override
@@ -42,17 +44,7 @@ public class PrivateMessageCommand extends Command implements TabExecutor {
         String[] messageWords = Arrays.copyOfRange(args, 1, args.length);
         String message = String.join(" ", messageWords);
 
-        String senderMessage = config.pmSentFormat
-                .replace("{NAME}", sender.getName())
-                .replace("{DISPLAY_NAME}", sender.getDisplayName())
-                .replace("{MESSAGE}", message);
-        String receiverMessage = config.pmReceivedFormat
-                .replace("{NAME}", receiver.getName())
-                .replace("{DISPLAY_NAME}", receiver.getDisplayName())
-                .replace("{MESSAGE}", message);
-
-        sender.sendMessage(TextComponent.fromLegacyText(senderMessage));
-        receiver.sendMessage(TextComponent.fromLegacyText(receiverMessage));
+        plugin.sendPrivateMessage(sender, receiver, message);
     }
 
     @Override

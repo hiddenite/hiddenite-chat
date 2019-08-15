@@ -9,9 +9,16 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.event.EventHandler;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.UUID;
 
 public class YoctoChatPlugin extends Plugin implements Listener {
     private Configuration config = new Configuration();
+    private HashMap<UUID, UUID> lastPrivateMessages = new HashMap<>();
+
+    public Configuration getConfig() {
+        return config;
+    }
 
     @Override
     public void onEnable() {
@@ -25,7 +32,8 @@ public class YoctoChatPlugin extends Plugin implements Listener {
         }
 
         getProxy().getPluginManager().registerListener(this, this);
-        getProxy().getPluginManager().registerCommand(this, new PrivateMessageCommand(config));
+        getProxy().getPluginManager().registerCommand(this, new PrivateMessageCommand(this));
+        getProxy().getPluginManager().registerCommand(this, new ReplyCommand(this));
     }
 
     @EventHandler
@@ -58,6 +66,30 @@ public class YoctoChatPlugin extends Plugin implements Listener {
         });
 
         event.setCancelled(true);
+    }
+
+    public void sendPrivateMessage(ProxiedPlayer sender, ProxiedPlayer receiver, String message) {
+        lastPrivateMessages.put(receiver.getUniqueId(), sender.getUniqueId());
+
+        String senderMessage = config.pmSentFormat
+                .replace("{NAME}", receiver.getName())
+                .replace("{DISPLAY_NAME}", receiver.getDisplayName())
+                .replace("{MESSAGE}", message);
+        String receiverMessage = config.pmReceivedFormat
+                .replace("{NAME}", sender.getName())
+                .replace("{DISPLAY_NAME}", sender.getDisplayName())
+                .replace("{MESSAGE}", message);
+
+        sender.sendMessage(TextComponent.fromLegacyText(senderMessage));
+        receiver.sendMessage(TextComponent.fromLegacyText(receiverMessage));
+    }
+
+    public ProxiedPlayer getLastPrivateMessageSender(ProxiedPlayer player) {
+        UUID lastSender = lastPrivateMessages.get(player.getUniqueId());
+        if (lastSender != null) {
+            return getProxy().getPlayer(lastSender);
+        }
+        return null;
     }
 
     private String getChatFormat(ProxiedPlayer player) {
