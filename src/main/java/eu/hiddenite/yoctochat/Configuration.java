@@ -19,6 +19,10 @@ public class Configuration {
     public String pmErrorNotFound;
     public String pmErrorNoReply;
 
+    public boolean discordEnabled;
+    public String discordBotToken;
+    public long discordChannelId;
+
     public boolean load(Plugin plugin) {
         if (!plugin.getDataFolder().exists()) {
             plugin.getDataFolder().mkdir();
@@ -50,6 +54,10 @@ public class Configuration {
             pmReceivedFormat = configuration.getString("private_messages.received");
             pmErrorNotFound = configuration.getString("private_messages.error_not_found");
             pmErrorNoReply = configuration.getString("private_messages.error_no_reply");
+
+            discordEnabled = configuration.getBoolean("discord.enabled");
+            discordBotToken = configuration.getString("discord.bot_token");
+            discordChannelId = configuration.getLong("discord.channel_id");
 
         } catch (IOException e) {
             e.printStackTrace();

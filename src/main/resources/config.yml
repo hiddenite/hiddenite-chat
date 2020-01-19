@@ -23,3 +23,12 @@ private_messages:
   error_not_found: "§cPlayer {RECEIVER} not found."
   # Message sent to the sender when there is no one to reply to.
   error_no_reply: "§cNo one to reply to."
+
+# Discord configuration.
+discord:
+  # If enabled, all public messages will be sent to the specified Discord channel.
+  enabled: false
+  # Your private bot token.
+  bot_token: "..."
+  # Id of the channel where the messages should be sent.
+  channel_id: 123456

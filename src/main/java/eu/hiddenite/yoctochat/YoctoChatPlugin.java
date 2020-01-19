@@ -7,14 +7,19 @@ import net.md_5.bungee.api.event.ChatEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.event.EventHandler;
+import org.javacord.api.DiscordApiBuilder;
+import org.javacord.api.entity.channel.Channel;
+import org.javacord.api.entity.channel.TextChannel;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.UUID;
 
 public class YoctoChatPlugin extends Plugin implements Listener {
     private Configuration config = new Configuration();
     private HashMap<UUID, UUID> lastPrivateMessages = new HashMap<>();
+    private TextChannel discordTextChannel = null;
 
     public Configuration getConfig() {
         return config;
@@ -34,6 +39,23 @@ public class YoctoChatPlugin extends Plugin implements Listener {
         getProxy().getPluginManager().registerListener(this, this);
         getProxy().getPluginManager().registerCommand(this, new PrivateMessageCommand(this));
         getProxy().getPluginManager().registerCommand(this, new ReplyCommand(this));
+
+        if (config.discordEnabled) {
+            getLogger().info("Discord bot enabled, logging in.");
+            new DiscordApiBuilder().setToken(config.discordBotToken).login().thenAccept(api -> {
+                Optional<Channel> channel = api.getChannelById(config.discordChannelId);
+                if (channel.isPresent()) {
+                    Optional<TextChannel> textChannel = channel.get().asTextChannel();
+                    if (textChannel.isPresent()) {
+                        discordTextChannel = textChannel.get();
+                    } else {
+                        getLogger().warning("The specified Discord channel is not a text channel.");
+                    }
+                } else {
+                    getLogger().warning("The specified Discord channel could not be found.");
+                }
+            });
+        }
     }
 
     @EventHandler
@@ -66,6 +88,11 @@ public class YoctoChatPlugin extends Plugin implements Listener {
         });
 
         event.setCancelled(true);
+
+        if (discordTextChannel != null) {
+            String discordMessage = TextComponent.toPlainText(messageComponents);
+            discordTextChannel.sendMessage(discordMessage);
+        }
     }
 
     public void sendPrivateMessage(ProxiedPlayer sender, ProxiedPlayer receiver, String message) {
