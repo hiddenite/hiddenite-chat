@@ -1,6 +1,8 @@
-package eu.hiddenite.chat;
+package eu.hiddenite.chat.commands;
 
 import com.google.common.collect.ImmutableSet;
+import eu.hiddenite.chat.Configuration;
+import eu.hiddenite.chat.managers.PrivateMessageManager;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -13,13 +15,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class PrivateMessageCommand extends Command implements TabExecutor {
-    private ChatPlugin plugin;
+    private PrivateMessageManager manager;
     private Configuration config;
 
-    PrivateMessageCommand(ChatPlugin plugin) {
+    public PrivateMessageCommand(PrivateMessageManager manager) {
         super("msg", null, "w", "m", "tell", "t");
-        this.plugin = plugin;
-        config = plugin.getConfig();
+        this.manager = manager;
+        config = manager.getConfig();
     }
 
     @Override
@@ -44,7 +46,7 @@ public class PrivateMessageCommand extends Command implements TabExecutor {
         String[] messageWords = Arrays.copyOfRange(args, 1, args.length);
         String message = String.join(" ", messageWords);
 
-        plugin.sendPrivateMessage(sender, receiver, message);
+        manager.sendPrivateMessage(sender, receiver, message);
     }
 
     @Override

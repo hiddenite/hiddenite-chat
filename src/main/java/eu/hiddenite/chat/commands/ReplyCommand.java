@@ -1,6 +1,8 @@
-package eu.hiddenite.chat;
+package eu.hiddenite.chat.commands;
 
 import com.google.common.collect.ImmutableSet;
+import eu.hiddenite.chat.Configuration;
+import eu.hiddenite.chat.managers.PrivateMessageManager;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -8,13 +10,13 @@ import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
 
 public class ReplyCommand extends Command implements TabExecutor {
-    private ChatPlugin plugin;
+    private PrivateMessageManager manager;
     private Configuration config;
 
-    ReplyCommand(ChatPlugin plugin) {
+    public ReplyCommand(PrivateMessageManager manager) {
         super("r");
-        this.plugin = plugin;
-        config = plugin.getConfig();
+        this.manager = manager;
+        config = manager.getConfig();
     }
 
     @Override
@@ -29,7 +31,7 @@ public class ReplyCommand extends Command implements TabExecutor {
             return;
         }
 
-        ProxiedPlayer receiver = plugin.getLastPrivateMessageSender(sender);
+        ProxiedPlayer receiver = manager.getLastPrivateMessageSender(sender);
         if (receiver == null) {
             sender.sendMessage(TextComponent.fromLegacyText(config.pmErrorNoReply));
             return;
@@ -37,7 +39,7 @@ public class ReplyCommand extends Command implements TabExecutor {
 
         String message = String.join(" ", args);
 
-        plugin.sendPrivateMessage(sender, receiver, message);
+        manager.sendPrivateMessage(sender, receiver, message);
     }
 
     @Override
