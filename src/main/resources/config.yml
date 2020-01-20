@@ -1,9 +1,9 @@
 # Chat formats, based on permissions.
 chat:
   # "admin" and "vip" are examples, you can use anything you want instead.
-  # Chat format that requires the "yoctochat.admin" permission.
+  # Chat format that requires the "hiddenite.chat.admin" permission.
   admin: "§c<[Admin] {DISPLAY_NAME}> §r{MESSAGE}"
-  # Chat format that requires the "yoctochat.vip" permission.
+  # Chat format that requires the "hiddenite.chat.vip" permission.
   vip: "§6<[VIP] {DISPLAY_NAME}> §r{MESSAGE}"
 
   # The last entry is the default chat format, used by everyone else.

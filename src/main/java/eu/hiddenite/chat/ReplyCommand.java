@@ -1,4 +1,4 @@
-package eu.hiddenite.yoctochat;
+package eu.hiddenite.chat;
 
 import com.google.common.collect.ImmutableSet;
 import net.md_5.bungee.api.CommandSender;
@@ -7,13 +7,11 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
 
-import java.util.Arrays;
-
 public class ReplyCommand extends Command implements TabExecutor {
-    private YoctoChatPlugin plugin;
+    private ChatPlugin plugin;
     private Configuration config;
 
-    ReplyCommand(YoctoChatPlugin plugin) {
+    ReplyCommand(ChatPlugin plugin) {
         super("r");
         this.plugin = plugin;
         config = plugin.getConfig();

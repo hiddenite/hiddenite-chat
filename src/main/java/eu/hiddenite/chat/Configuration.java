@@ -1,4 +1,4 @@
-package eu.hiddenite.yoctochat;
+package eu.hiddenite.chat;
 
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.ConfigurationProvider;

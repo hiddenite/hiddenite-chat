@@ -1,4 +1,4 @@
-package eu.hiddenite.yoctochat;
+package eu.hiddenite.chat;
 
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Optional;
 import java.util.UUID;
 
-public class YoctoChatPlugin extends Plugin implements Listener {
+public class ChatPlugin extends Plugin implements Listener {
     private Configuration config = new Configuration();
     private HashMap<UUID, UUID> lastPrivateMessages = new HashMap<>();
     private TextChannel discordTextChannel = null;
@@ -123,7 +123,7 @@ public class YoctoChatPlugin extends Plugin implements Listener {
         String last = null;
         for (String key : config.chatFormats.keySet()) {
             last = key;
-            if (player.hasPermission("yoctochat." + key)) {
+            if (player.hasPermission("hiddenite.chat." + key)) {
                 return config.chatFormats.get(key);
             }
         }

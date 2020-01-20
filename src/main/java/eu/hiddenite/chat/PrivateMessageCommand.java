@@ -1,4 +1,4 @@
-package eu.hiddenite.yoctochat;
+package eu.hiddenite.chat;
 
 import com.google.common.collect.ImmutableSet;
 import net.md_5.bungee.api.CommandSender;
@@ -13,10 +13,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class PrivateMessageCommand extends Command implements TabExecutor {
-    private YoctoChatPlugin plugin;
+    private ChatPlugin plugin;
     private Configuration config;
 
-    PrivateMessageCommand(YoctoChatPlugin plugin) {
+    PrivateMessageCommand(ChatPlugin plugin) {
         super("msg", null, "w", "m", "tell", "t");
         this.plugin = plugin;
         config = plugin.getConfig();
