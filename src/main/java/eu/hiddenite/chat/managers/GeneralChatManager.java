@@ -57,14 +57,14 @@ public class GeneralChatManager extends Manager implements Listener {
         event.setCancelled(true);
 
         String discordMessage = TextComponent.toPlainText(messageComponents);
-        DiscordManager.getInstance().sendMessage(discordMessage);
+        DiscordManager.getInstance().sendMessage(discordMessage, DiscordManager.Style.NORMAL);
     }
 
     private String getChatFormat(ProxiedPlayer player) {
         String last = null;
         for (String key : getConfig().chatFormats.keySet()) {
             last = key;
-            if (player.hasPermission("hiddenite.chat." + key)) {
+            if (player.hasPermission("hiddenite.chat." + key) || player.hasPermission("yoctochat." + key)) {
                 return getConfig().chatFormats.get(key);
             }
         }

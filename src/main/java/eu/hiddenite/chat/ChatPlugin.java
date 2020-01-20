@@ -1,15 +1,11 @@
 package eu.hiddenite.chat;
 
-import eu.hiddenite.chat.managers.DiscordManager;
-import eu.hiddenite.chat.managers.GeneralChatManager;
-import eu.hiddenite.chat.managers.Manager;
-import eu.hiddenite.chat.managers.PrivateMessageManager;
-import net.md_5.bungee.api.plugin.Listener;
+import eu.hiddenite.chat.managers.*;
 import net.md_5.bungee.api.plugin.Plugin;
 
 import java.util.ArrayList;
 
-public class ChatPlugin extends Plugin implements Listener {
+public class ChatPlugin extends Plugin {
     private Configuration config = new Configuration();
 
     private ArrayList<Manager> managers = new ArrayList<>();
@@ -28,10 +24,14 @@ public class ChatPlugin extends Plugin implements Listener {
         for (Manager manager : managers) {
             manager.onEnable();
         }
+
+        getLogger().info("Plugin enabled, " + managers.size() + " managers registered.");
     }
+
     private void registerManagers() {
         managers.add(new GeneralChatManager(this));
         managers.add(new PrivateMessageManager(this));
+        managers.add(new LoginMessageManager(this));
         managers.add(new DiscordManager(this));
     }
 }

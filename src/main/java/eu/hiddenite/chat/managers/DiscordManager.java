@@ -10,6 +10,11 @@ import java.util.Optional;
 public class DiscordManager extends Manager {
     private TextChannel discordTextChannel = null;
 
+    public enum Style {
+        NORMAL,
+        ITALIC
+    }
+
     public DiscordManager(ChatPlugin plugin) {
         super(plugin);
         instance = this;
@@ -37,17 +42,25 @@ public class DiscordManager extends Manager {
         });
     }
 
-    public void sendMessage(String message) {
+    public void sendMessage(String message, Style style) {
         if (discordTextChannel == null) {
             return;
         }
-        discordTextChannel.sendMessage(escapeMarkdown(message));
+        String escapedMessage = escapeMarkdown(message);
+        String formattedMessage;
+        if (style == Style.ITALIC) {
+            formattedMessage = "*" + escapedMessage + "*";
+        } else {
+            formattedMessage = escapedMessage;
+        }
+        discordTextChannel.sendMessage(formattedMessage);
     }
 
     private String escapeMarkdown(String rawMessage) {
         return rawMessage
                 .replace("\\", "\\\\")
                 .replace("*", "\\*")
+                .replace("_", "\\_")
                 .replace("~", "\\~")
                 .replace("`", "\\`")
                 .replace("|", "\\|")

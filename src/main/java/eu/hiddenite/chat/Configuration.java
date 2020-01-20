@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 
 public class Configuration {
     public LinkedHashMap<String, String> chatFormats = new LinkedHashMap<>();
+
     public String pmSentFormat;
     public String pmReceivedFormat;
     public String pmUsage;
@@ -19,13 +20,20 @@ public class Configuration {
     public String pmErrorNotFound;
     public String pmErrorNoReply;
 
+    public String welcomeMessageFormat;
+    public String loginMessageFormat;
+    public String logoutMessageFormat;
+    public int onlinePlayersLimit;
+
     public boolean discordEnabled;
     public String discordBotToken;
     public long discordChannelId;
 
     public boolean load(Plugin plugin) {
         if (!plugin.getDataFolder().exists()) {
-            plugin.getDataFolder().mkdir();
+            if (!plugin.getDataFolder().mkdir()) {
+                return false;
+            }
         }
 
         File file = new File(plugin.getDataFolder(), "config.yml");
@@ -54,6 +62,11 @@ public class Configuration {
             pmReceivedFormat = configuration.getString("private_messages.received");
             pmErrorNotFound = configuration.getString("private_messages.error_not_found");
             pmErrorNoReply = configuration.getString("private_messages.error_no_reply");
+
+            welcomeMessageFormat = configuration.getString("login.welcome_message");
+            loginMessageFormat = configuration.getString("login.login_message");
+            logoutMessageFormat = configuration.getString("login.logout_message");
+            onlinePlayersLimit = configuration.getInt("login.online_players_limit");
 
             discordEnabled = configuration.getBoolean("discord.enabled");
             discordBotToken = configuration.getString("discord.bot_token");
