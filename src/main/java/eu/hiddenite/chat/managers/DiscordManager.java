@@ -41,8 +41,19 @@ public class DiscordManager extends Manager {
         if (discordTextChannel == null) {
             return;
         }
+        discordTextChannel.sendMessage(escapeMarkdown(message));
+    }
 
-        discordTextChannel.sendMessage(message.replace("_", "\\_"));
+    private String escapeMarkdown(String rawMessage) {
+        return rawMessage
+                .replace("\\", "\\\\")
+                .replace("*", "\\*")
+                .replace("~", "\\~")
+                .replace("`", "\\`")
+                .replace("|", "\\|")
+                .replace("<", "\\<")
+                .replace(">", "\\>")
+                .replace("@", "\\@");
     }
 
     private static DiscordManager instance;
