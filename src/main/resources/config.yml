@@ -9,6 +9,8 @@ chat:
   # The last entry is the default chat format, used by everyone else.
   default: "<{DISPLAY_NAME}> {MESSAGE}"
 
+hello: "§6Welcome to the server.\nCheck out our website: www.your-server.com"
+
 login:
   # Message sent when a player joins for the first time.
   welcome_message: §e{DISPLAY_NAME} §ojoined the server for the first time!
@@ -34,6 +36,18 @@ private_messages:
   error_not_found: "§cPlayer {RECEIVER} not found."
   # Message sent to the sender when there is no one to reply to.
   error_no_reply: "§cNo one to reply to."
+
+# Global tab configuration.
+global_tab:
+  # If enabled, a custom tab containing every player from every server will be used.
+  enabled: true
+  # Colors to use in the tab list, based on permissions.
+  colors:
+    # "admin" and "vip" are examples, you can use anything you want instead.
+    # Color that requires the "hiddenite.chat.admin" permission.
+    admin: "red"
+    # Color that requires the "hiddenite.chat.vip" permission.
+    vip: "gold"
 
 # Discord configuration.
 discord:

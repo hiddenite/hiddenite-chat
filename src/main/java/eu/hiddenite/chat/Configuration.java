@@ -20,10 +20,15 @@ public class Configuration {
     public String pmErrorNotFound;
     public String pmErrorNoReply;
 
+    public String helloMessage;
+
     public String welcomeMessageFormat;
     public String loginMessageFormat;
     public String logoutMessageFormat;
     public int onlinePlayersLimit;
+
+    public boolean globalTabEnabled;
+    public LinkedHashMap<String, String> globalTabColors = new LinkedHashMap<>();
 
     public boolean discordEnabled;
     public String discordBotToken;
@@ -63,10 +68,18 @@ public class Configuration {
             pmErrorNotFound = configuration.getString("private_messages.error_not_found");
             pmErrorNoReply = configuration.getString("private_messages.error_no_reply");
 
+            helloMessage = configuration.getString("hello");
+
             welcomeMessageFormat = configuration.getString("login.welcome_message");
             loginMessageFormat = configuration.getString("login.login_message");
             logoutMessageFormat = configuration.getString("login.logout_message");
             onlinePlayersLimit = configuration.getInt("login.online_players_limit");
+
+            globalTabEnabled = configuration.getBoolean("global_tab.enabled");
+            net.md_5.bungee.config.Configuration globalTabColorsSection = configuration.getSection("global_tab.colors");
+            for (String key : globalTabColorsSection.getKeys()) {
+                globalTabColors.put(key, globalTabColorsSection.getString(key));
+            }
 
             discordEnabled = configuration.getBoolean("discord.enabled");
             discordBotToken = configuration.getString("discord.bot_token");

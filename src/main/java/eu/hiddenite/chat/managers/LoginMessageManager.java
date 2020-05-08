@@ -39,6 +39,10 @@ public class LoginMessageManager extends Manager implements Listener {
             }
         }
 
+        if (getConfig().helloMessage != null && getConfig().helloMessage.length() > 0) {
+            event.getPlayer().sendMessage(TextComponent.fromLegacyText(getConfig().helloMessage));
+        }
+
         if (!hasPlayedBefore) {
             formatAndBroadcastMessage(getConfig().welcomeMessageFormat, event.getPlayer());
         } else if (getProxy().getOnlineCount() < getConfig().onlinePlayersLimit) {

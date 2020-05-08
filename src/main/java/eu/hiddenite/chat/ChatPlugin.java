@@ -33,5 +33,6 @@ public class ChatPlugin extends Plugin {
         managers.add(new PrivateMessageManager(this));
         managers.add(new LoginMessageManager(this));
         managers.add(new DiscordManager(this));
+        managers.add(new TabListManager(this));
     }
 }
