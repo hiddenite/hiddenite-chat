@@ -1,5 +1,8 @@
-# Chat formats, based on permissions.
-chat:
+# Message sent when joining the network.
+hello: "§6Welcome to the server.\nCheck out our website: www.your-server.com"
+
+# Chat format, based on permissions.
+chat_format:
   # "admin" and "vip" are examples, you can use anything you want instead.
   # Chat format that requires the "hiddenite.chat.admin" permission.
   admin: "§c<[Admin] {DISPLAY_NAME}> §r{MESSAGE}"
@@ -9,15 +12,21 @@ chat:
   # The last entry is the default chat format, used by everyone else.
   default: "<{DISPLAY_NAME}> {MESSAGE}"
 
-hello: "§6Welcome to the server.\nCheck out our website: www.your-server.com"
+# Action format, based on permissions.
+# Works the same way as chat_format, but for the /me command instead.
+action_format:
+  admin: "§c* {DISPLAY_NAME} §r{MESSAGE}"
+  vip: "§6* {DISPLAY_NAME} §r{MESSAGE}"
+  default: "* {DISPLAY_NAME} {MESSAGE}"
 
+# Messages sent to everyone when someone joins or leaves.
 login:
   # Message sent when a player joins for the first time.
-  welcome_message: §e{DISPLAY_NAME} §ojoined the server for the first time!
+  welcome_message: "§e{DISPLAY_NAME} §ojoined the server for the first time!"
   # Message sent when a player joins.
-  login_message: §e{DISPLAY_NAME} §ologged in.
+  login_message: "§e{DISPLAY_NAME} §ologged in."
   # Message sent when a player leaves.
-  logout_message: §e{DISPLAY_NAME} §ologged out.
+  logout_message: "§e{DISPLAY_NAME} §ologged out."
   # Player limit after which login and logout messages are no longer sent.
   # This is mostly to prevent spam on large servers. Welcome messages are unaffected.
   online_players_limit: 30

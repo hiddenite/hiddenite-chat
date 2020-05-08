@@ -11,7 +11,10 @@ import java.nio.file.Files;
 import java.util.LinkedHashMap;
 
 public class Configuration {
+    public String helloMessage;
+
     public LinkedHashMap<String, String> chatFormats = new LinkedHashMap<>();
+    public LinkedHashMap<String, String> actionFormats = new LinkedHashMap<>();
 
     public String pmSentFormat;
     public String pmReceivedFormat;
@@ -19,8 +22,6 @@ public class Configuration {
     public String pmReplyUsage;
     public String pmErrorNotFound;
     public String pmErrorNoReply;
-
-    public String helloMessage;
 
     public String welcomeMessageFormat;
     public String loginMessageFormat;
@@ -56,9 +57,14 @@ public class Configuration {
                     .getProvider(YamlConfiguration.class)
                     .load(new File(plugin.getDataFolder(), "config.yml"));
 
-            net.md_5.bungee.config.Configuration chatSection = configuration.getSection("chat");
+            net.md_5.bungee.config.Configuration chatSection = configuration.getSection("chat_format");
             for (String key : chatSection.getKeys()) {
                 chatFormats.put(key, chatSection.getString(key));
+            }
+
+            net.md_5.bungee.config.Configuration actionSection = configuration.getSection("action_format");
+            for (String key : actionSection.getKeys()) {
+                actionFormats.put(key, actionSection.getString(key));
             }
 
             pmUsage = configuration.getString("private_messages.usage");
