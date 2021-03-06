@@ -46,10 +46,24 @@ private_messages:
   # Message sent to the sender when there is no one to reply to.
   error_no_reply: "§cNo one to reply to."
 
+# Auto-messages configuration.
+auto_messages:
+  # If enabled, the messages below will the sent automatically at a regular interval.
+  enabled: false
+  # Interval between each message, in seconds.
+  interval: 60
+  # Will be added at the beginning of each message.
+  header: "§b[AutoMessage]§r "
+  # List of all messages. The message to send will be selected randomly.
+  messages:
+    - "We have a website and a discord server."
+    - "Remember to read the rules!"
+    - "Don't forget to drink water."
+
 # Global tab configuration.
 global_tab:
   # If enabled, a custom tab containing every player from every server will be used.
-  enabled: true
+  enabled: false
   # Colors to use in the tab list, based on permissions.
   colors:
     # "admin" and "vip" are examples, you can use anything you want instead.

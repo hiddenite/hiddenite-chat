@@ -8,7 +8,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 public class Configuration {
     public String helloMessage;
@@ -27,6 +29,11 @@ public class Configuration {
     public String loginMessageFormat;
     public String logoutMessageFormat;
     public int onlinePlayersLimit;
+
+    public boolean autoMessagesEnabled;
+    public int autoMessagesInterval;
+    public String autoMessagesHeader;
+    public List<String> autoMessagesList = new ArrayList<>();
 
     public boolean globalTabEnabled;
     public LinkedHashMap<String, String> globalTabColors = new LinkedHashMap<>();
@@ -80,6 +87,11 @@ public class Configuration {
             loginMessageFormat = configuration.getString("login.login_message");
             logoutMessageFormat = configuration.getString("login.logout_message");
             onlinePlayersLimit = configuration.getInt("login.online_players_limit");
+
+            autoMessagesEnabled = configuration.getBoolean("auto_messages.enabled");
+            autoMessagesInterval = configuration.getInt("auto_messages.interval");
+            autoMessagesHeader = configuration.getString("auto_messages.header");
+            autoMessagesList = configuration.getStringList("auto_messages.messages");
 
             globalTabEnabled = configuration.getBoolean("global_tab.enabled");
             net.md_5.bungee.config.Configuration globalTabColorsSection = configuration.getSection("global_tab.colors");
