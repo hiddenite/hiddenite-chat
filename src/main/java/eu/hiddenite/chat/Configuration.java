@@ -36,6 +36,8 @@ public class Configuration {
     public List<String> autoMessagesList = new ArrayList<>();
 
     public boolean globalTabEnabled;
+    public String globalTabHeader;
+    public String globalTabFooter;
     public LinkedHashMap<String, String> globalTabColors = new LinkedHashMap<>();
 
     public boolean discordEnabled;
@@ -94,6 +96,8 @@ public class Configuration {
             autoMessagesList = configuration.getStringList("auto_messages.messages");
 
             globalTabEnabled = configuration.getBoolean("global_tab.enabled");
+            globalTabHeader = configuration.getString("global_tab.header");
+            globalTabFooter = configuration.getString("global_tab.footer");
             net.md_5.bungee.config.Configuration globalTabColorsSection = configuration.getSection("global_tab.colors");
             for (String key : globalTabColorsSection.getKeys()) {
                 globalTabColors.put(key, globalTabColorsSection.getString(key));

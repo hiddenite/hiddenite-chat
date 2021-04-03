@@ -64,6 +64,9 @@ auto_messages:
 global_tab:
   # If enabled, a custom tab containing every player from every server will be used.
   enabled: false
+  # The header and footer of the tab list.
+  header: "§aYour server\n"
+  footer: "\n§a{PLAYERS}/{LIMIT}§b players online"
   # Colors to use in the tab list, based on permissions.
   colors:
     # "admin" and "vip" are examples, you can use anything you want instead.

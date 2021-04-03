@@ -3,10 +3,13 @@ package eu.hiddenite.chat.managers;
 import eu.hiddenite.chat.ChatPlugin;
 import net.md_5.bungee.UserConnection;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PostLoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
+import net.md_5.bungee.chat.ComponentSerializer;
 import net.md_5.bungee.event.EventHandler;
+import net.md_5.bungee.protocol.packet.PlayerListHeaderFooter;
 import net.md_5.bungee.protocol.packet.PlayerListItem;
 import net.md_5.bungee.tab.TabList;
 
@@ -51,6 +54,7 @@ public class TabListManager extends Manager implements Listener {
             player.unsafe().sendPacket(playerListItem);
 
             this.updateFakePlayers();
+            this.sendHeaderAndFooter();
         }
 
         @Override
@@ -116,6 +120,25 @@ public class TabListManager extends Manager implements Listener {
                 packet.setItems(new PlayerListItem.Item[] { item });
                 player.unsafe().sendPacket(packet);
             }
+        }
+
+        private void sendHeaderAndFooter() {
+            PlayerListHeaderFooter packet = new PlayerListHeaderFooter();
+
+            String configHeader = manager.getConfig().globalTabHeader;
+            String configFooter = manager.getConfig().globalTabFooter;
+
+            if (configHeader != null) {
+                packet.setHeader(ComponentSerializer.toString(TextComponent.fromLegacyText(configHeader)));
+            }
+            if (configFooter != null) {
+                ProxyServer server = ProxyServer.getInstance();
+                configFooter = configFooter.replace("{PLAYERS}", String.valueOf(server.getOnlineCount()));
+                configFooter = configFooter.replace("{LIMIT}", String.valueOf(server.getConfig().getPlayerLimit()));
+                packet.setFooter(ComponentSerializer.toString(TextComponent.fromLegacyText(configFooter)));
+            }
+
+            player.unsafe().sendPacket(packet);
         }
 
         private String getTabColor(ProxiedPlayer player) {
