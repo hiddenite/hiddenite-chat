@@ -10,13 +10,15 @@ import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
 
 public class ReplyCommand extends Command implements TabExecutor {
-    private PrivateMessageManager manager;
-    private Configuration config;
+    private final PrivateMessageManager manager;
+
+    private Configuration getConfig() {
+        return manager.getConfig();
+    }
 
     public ReplyCommand(PrivateMessageManager manager) {
         super("r");
         this.manager = manager;
-        config = manager.getConfig();
     }
 
     @Override
@@ -27,13 +29,13 @@ public class ReplyCommand extends Command implements TabExecutor {
 
         ProxiedPlayer sender = (ProxiedPlayer)commandSender;
         if (args.length < 1) {
-            sender.sendMessage(TextComponent.fromLegacyText(config.pmReplyUsage));
+            sender.sendMessage(TextComponent.fromLegacyText(getConfig().pmReplyUsage));
             return;
         }
 
         ProxiedPlayer receiver = manager.getLastPrivateMessageSender(sender);
         if (receiver == null) {
-            sender.sendMessage(TextComponent.fromLegacyText(config.pmErrorNoReply));
+            sender.sendMessage(TextComponent.fromLegacyText(getConfig().pmErrorNoReply));
             return;
         }
 

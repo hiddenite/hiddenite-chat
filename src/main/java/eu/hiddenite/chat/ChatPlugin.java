@@ -1,5 +1,6 @@
 package eu.hiddenite.chat;
 
+import eu.hiddenite.chat.commands.ReloadCommand;
 import eu.hiddenite.chat.managers.*;
 import net.md_5.bungee.api.plugin.Plugin;
 
@@ -8,7 +9,7 @@ import java.util.ArrayList;
 public class ChatPlugin extends Plugin {
     private Configuration config = new Configuration();
 
-    private ArrayList<Manager> managers = new ArrayList<>();
+    private final ArrayList<Manager> managers = new ArrayList<>();
 
     public Configuration getConfig() {
         return config;
@@ -16,9 +17,12 @@ public class ChatPlugin extends Plugin {
 
     @Override
     public void onEnable() {
-        if (!config.load(this)) {
+        if (!reloadConfiguration()) {
+            getLogger().warning("Invalid configuration, plugin not enabled.");
             return;
         }
+
+        getProxy().getPluginManager().registerCommand(this, new ReloadCommand(this));
 
         registerManagers();
         for (Manager manager : managers) {
@@ -26,6 +30,15 @@ public class ChatPlugin extends Plugin {
         }
 
         getLogger().info("Plugin enabled, " + managers.size() + " managers registered.");
+    }
+
+    public boolean reloadConfiguration() {
+        Configuration config = new Configuration();
+        if (!config.load(this)) {
+            return false;
+        }
+        this.config = config;
+        return true;
     }
 
     private void registerManagers() {

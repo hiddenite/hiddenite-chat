@@ -15,13 +15,15 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class PrivateMessageCommand extends Command implements TabExecutor {
-    private PrivateMessageManager manager;
-    private Configuration config;
+    private final PrivateMessageManager manager;
+
+    private Configuration getConfig() {
+        return manager.getConfig();
+    }
 
     public PrivateMessageCommand(PrivateMessageManager manager) {
         super("msg", null, "w", "m", "tell", "t");
         this.manager = manager;
-        config = manager.getConfig();
     }
 
     @Override
@@ -32,13 +34,13 @@ public class PrivateMessageCommand extends Command implements TabExecutor {
 
         ProxiedPlayer sender = (ProxiedPlayer)commandSender;
         if (args.length < 2) {
-            sender.sendMessage(TextComponent.fromLegacyText(config.pmUsage));
+            sender.sendMessage(TextComponent.fromLegacyText(getConfig().pmUsage));
             return;
         }
 
         ProxiedPlayer receiver = ProxyServer.getInstance().getPlayer(args[0]);
         if (receiver == null) {
-            String errorMessage = config.pmErrorNotFound.replace("{RECEIVER}", args[0]);
+            String errorMessage = getConfig().pmErrorNotFound.replace("{RECEIVER}", args[0]);
             sender.sendMessage(TextComponent.fromLegacyText(errorMessage));
             return;
         }

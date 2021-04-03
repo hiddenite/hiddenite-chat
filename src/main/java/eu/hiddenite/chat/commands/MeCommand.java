@@ -10,12 +10,10 @@ import net.md_5.bungee.api.plugin.TabExecutor;
 
 public class MeCommand extends Command implements TabExecutor {
     private final GeneralChatManager manager;
-    private final Configuration config;
 
     public MeCommand(GeneralChatManager manager) {
         super("me", null);
         this.manager = manager;
-        config = manager.getConfig();
     }
 
     @Override
