@@ -11,6 +11,7 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 
 import java.io.*;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
 
@@ -59,7 +60,11 @@ public class LoginMessageManager extends Manager implements Listener {
 
     private void formatAndBroadcastMessage(String rawMessage, ProxiedPlayer player) {
         BaseComponent[] messageComponents = formatText(rawMessage, player);
-        getProxy().broadcast(messageComponents);
+
+        Collection<ProxiedPlayer> allPlayers = getProxy().getPlayers();
+        allPlayers.forEach((receiver) ->
+                receiver.sendMessage(player.getUniqueId(), messageComponents)
+        );
 
         String discordMessage = TextComponent.toPlainText(messageComponents);
         DiscordManager.getInstance().sendMessage(discordMessage, DiscordManager.Style.ITALIC);

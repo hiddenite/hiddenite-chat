@@ -34,8 +34,8 @@ public class PrivateMessageManager extends Manager {
                 .replace("{DISPLAY_NAME}", sender.getDisplayName())
                 .replace("{MESSAGE}", message);
 
-        sender.sendMessage(TextComponent.fromLegacyText(senderMessage));
-        receiver.sendMessage(TextComponent.fromLegacyText(receiverMessage));
+        sender.sendMessage(sender.getUniqueId(), TextComponent.fromLegacyText(senderMessage));
+        receiver.sendMessage(sender.getUniqueId(), TextComponent.fromLegacyText(receiverMessage));
     }
 
     public ProxiedPlayer getLastPrivateMessageSender(ProxiedPlayer player) {

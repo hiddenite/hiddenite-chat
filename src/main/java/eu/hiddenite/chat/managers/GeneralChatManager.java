@@ -11,6 +11,7 @@ import net.md_5.bungee.event.EventHandler;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.UUID;
 
 public class GeneralChatManager extends Manager implements Listener {
     public GeneralChatManager(ChatPlugin plugin) {
@@ -45,24 +46,24 @@ public class GeneralChatManager extends Manager implements Listener {
         String message = event.getMessage();
         String formattedMessage = formatMessage(sender, chatFormat, message);
 
-        sendToEveryone(formattedMessage);
+        sendToEveryone(sender.getUniqueId(), formattedMessage);
     }
 
     public void sendActionMessage(ProxiedPlayer sender, String message) {
         String actionFormat = getActionFormat(sender);
         String formattedMessage = formatMessage(sender, actionFormat, message);
 
-        sendToEveryone(formattedMessage);
+        sendToEveryone(sender.getUniqueId(), formattedMessage);
     }
 
-    private void sendToEveryone(String formattedMessage) {
+    private void sendToEveryone(UUID sender, String formattedMessage) {
         Collection<ProxiedPlayer> allPlayers = getProxy().getPlayers();
         BaseComponent[] messageComponents = TextComponent.fromLegacyText(formattedMessage);
 
         getLogger().info(formattedMessage);
-        allPlayers.forEach((receiver) -> {
-            receiver.sendMessage(messageComponents);
-        });
+        allPlayers.forEach((receiver) ->
+                receiver.sendMessage(sender, messageComponents)
+        );
 
         String discordMessage = TextComponent.toPlainText(messageComponents);
         DiscordManager.getInstance().sendMessage(discordMessage, DiscordManager.Style.NORMAL);
