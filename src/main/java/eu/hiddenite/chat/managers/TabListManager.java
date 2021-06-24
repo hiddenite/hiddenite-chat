@@ -14,15 +14,16 @@ import net.md_5.bungee.protocol.packet.PlayerListItem;
 import net.md_5.bungee.tab.TabList;
 
 import java.lang.reflect.Field;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class TabListManager extends Manager implements Listener {
+    private static record TabListPlayer(UUID uuid, int gameMode, boolean isAfk, int latency) {}
+
     private static class CustomTabList extends TabList {
         private final TabListManager manager;
-        private final Collection<UUID> realPlayers = new HashSet<>();
-        private final Collection<UUID> fakePlayers = new HashSet<>();
+        private final HashMap<UUID, TabListPlayer> players = new HashMap<>();
+        private final HashMap<UUID, Integer> gameModes = new HashMap<>();
 
         public CustomTabList(TabListManager manager, ProxiedPlayer player) {
             super(player);
@@ -30,94 +31,120 @@ public class TabListManager extends Manager implements Listener {
         }
 
         @Override
+        public void onConnect() {}
+
+        @Override
+        public void onDisconnect() {}
+
+        @Override
         public void onUpdate(PlayerListItem playerListItem) {
-            for (PlayerListItem.Item item : playerListItem.getItems()) {
-                if (playerListItem.getAction() == PlayerListItem.Action.ADD_PLAYER) {
-                    realPlayers.add(item.getUuid());
-                    fakePlayers.remove(item.getUuid());
-                    ProxiedPlayer addedPlayer = ProxyServer.getInstance().getPlayer(item.getUuid());
-                    if (addedPlayer != null) {
-                        String customColor = getTabColor(addedPlayer);
-                        if (customColor != null) {
-                            item.setDisplayName("{\"extra\":[{\"color\":\"" +
-                                    customColor +
-                                    "\",\"text\":\"" +
-                                    addedPlayer.getDisplayName() +
-                                    "\"}],\"text\":\"\"}");
-                        }
-                    }
-                } else if (playerListItem.getAction() == PlayerListItem.Action.REMOVE_PLAYER) {
-                    realPlayers.remove(item.getUuid());
+            this.handleGameModeChanges(playerListItem);
+            this.sendUpdate(false);
+            if (playerListItem.getAction() == PlayerListItem.Action.UPDATE_LATENCY) {
+                player.unsafe().sendPacket(playerListItem);
+            }
+        }
+
+        private void handleGameModeChanges(PlayerListItem playerListItem) {
+            if (playerListItem.getAction() == PlayerListItem.Action.ADD_PLAYER ||
+                    playerListItem.getAction() == PlayerListItem.Action.UPDATE_GAMEMODE) {
+                for (PlayerListItem.Item item : playerListItem.getItems()) {
+                    gameModes.put(item.getUuid(), item.getGamemode());
                 }
             }
-
-            player.unsafe().sendPacket(playerListItem);
-
-            this.updateFakePlayers();
-            this.sendHeaderAndFooter();
+            if (playerListItem.getAction() == PlayerListItem.Action.REMOVE_PLAYER) {
+                for (PlayerListItem.Item item : playerListItem.getItems()) {
+                    gameModes.remove(item.getUuid());
+                }
+            }
         }
 
         @Override
         public void onPingChange(int latency) {
-            this.updateFakePlayers();
+            this.sendUpdate(false);
         }
 
         @Override
         public void onServerChange() {
-            PlayerListItem packet = new PlayerListItem();
-            packet.setAction(PlayerListItem.Action.REMOVE_PLAYER);
-            PlayerListItem.Item[] items = new PlayerListItem.Item[realPlayers.size()];
-            int i = 0;
-            for (UUID uuid : realPlayers) {
-                PlayerListItem.Item item = items[i++] = new PlayerListItem.Item();
-                item.setUuid(uuid);
-            }
-            packet.setItems(items);
-            player.unsafe().sendPacket(packet);
-            realPlayers.clear();
-
-            this.updateFakePlayers();
+            this.sendUpdate(true);
         }
 
-        private void updateFakePlayers() {
-            Collection<ProxiedPlayer> allPlayers = ProxyServer.getInstance().getPlayers();
-            HashSet<UUID> missingPlayers = new HashSet<>(fakePlayers);
-            for (ProxiedPlayer otherPlayer : allPlayers) {
-                missingPlayers.remove(otherPlayer.getUniqueId());
-                if (player != otherPlayer && player.getServer() != otherPlayer.getServer() && !realPlayers.contains(otherPlayer.getUniqueId()) && !fakePlayers.contains(otherPlayer.getUniqueId())) {
-                    fakePlayers.add(otherPlayer.getUniqueId());
-
-                    PlayerListItem.Item item = new PlayerListItem.Item();
-                    item.setUuid(otherPlayer.getUniqueId());
-                    item.setUsername(otherPlayer.getName());
-                    item.setGamemode(3);
-                    item.setPing(0);
-                    item.setProperties(new String[][] {});
-
-                    String customColor = getTabColor(otherPlayer);
-                    if (customColor != null) {
-                        item.setDisplayName("{\"extra\":[{\"color\":\"" +
-                                customColor +
-                                "\",\"text\":\"" +
-                                otherPlayer.getDisplayName() +
-                                "\"}],\"text\":\"\"}");
-                    }
-
-                    PlayerListItem packet = new PlayerListItem();
-                    packet.setAction(PlayerListItem.Action.ADD_PLAYER);
-                    packet.setItems(new PlayerListItem.Item[] { item });
-                    player.unsafe().sendPacket(packet);
-                }
+        private void sendUpdate(boolean force) {
+            this.sendHeaderAndFooter();
+            if (force) {
+                this.clearEverything();
             }
-            for (UUID uuid : missingPlayers) {
-                fakePlayers.remove(uuid);
+            this.updateEverything();
+        }
 
+        private void clearEverything() {
+            PlayerListItem packet = new PlayerListItem();
+            packet.setAction(PlayerListItem.Action.REMOVE_PLAYER);
+            packet.setItems(players.values().stream().map(x -> {
                 PlayerListItem.Item item = new PlayerListItem.Item();
-                item.setUuid(uuid);
+                item.setUuid(x.uuid);
+                return item;
+            }).toArray(PlayerListItem.Item[]::new));
+            player.unsafe().sendPacket(packet);
+            players.clear();
+        }
 
+        private void updateEverything() {
+            Collection<ProxiedPlayer> allPlayers = ProxyServer.getInstance().getPlayers();
+            Set<UUID> onlineIds = allPlayers.stream().map(ProxiedPlayer::getUniqueId).collect(Collectors.toSet());
+
+            // Compute removed players
+            ArrayList<PlayerListItem.Item> removedPlayers = new ArrayList<>();
+
+            for (TabListPlayer tabPlayer : players.values()) {
+                if (onlineIds.contains(tabPlayer.uuid)) {
+                    continue;
+                }
+                PlayerListItem.Item item = new PlayerListItem.Item();
+                item.setUuid(tabPlayer.uuid);
+                removedPlayers.add(item);
+            }
+
+            if (removedPlayers.size() > 0) {
                 PlayerListItem packet = new PlayerListItem();
                 packet.setAction(PlayerListItem.Action.REMOVE_PLAYER);
-                packet.setItems(new PlayerListItem.Item[] { item });
+                packet.setItems(removedPlayers.toArray(PlayerListItem.Item[]::new));
+                player.unsafe().sendPacket(packet);
+            }
+
+            // Compute added or changed players
+            ArrayList<PlayerListItem.Item> addedPlayers = new ArrayList<>();
+
+            for (ProxiedPlayer onlinePlayer : allPlayers) {
+                String serverA = player.getServer() != null ? player.getServer().getInfo().getName() : "";
+                String serverB = onlinePlayer.getServer() != null ? onlinePlayer.getServer().getInfo().getName() : "";
+
+                UUID uuid = onlinePlayer.getUniqueId();
+                int gameMode = serverA.equals(serverB) ? gameModes.getOrDefault(onlinePlayer.getUniqueId(), 0) : 3;
+                boolean isAfk = onlinePlayer.hasPermission("hiddenite.afk");
+                int ping = onlinePlayer.getPing();
+
+                TabListPlayer tabPlayer = players.get(onlinePlayer.getUniqueId());
+                if (tabPlayer != null && tabPlayer.isAfk == isAfk && tabPlayer.gameMode == gameMode) {
+                    continue;
+                }
+
+                PlayerListItem.Item item = new PlayerListItem.Item();
+                item.setUuid(onlinePlayer.getUniqueId());
+                item.setUsername(onlinePlayer.getName());
+                item.setGamemode(gameMode);
+                item.setPing(onlinePlayer.getPing());
+                item.setProperties(new String[][] {});
+                item.setDisplayName(getDisplayName(onlinePlayer, isAfk));
+                addedPlayers.add(item);
+
+                players.put(onlinePlayer.getUniqueId(), new TabListPlayer(uuid, gameMode, isAfk, ping));
+            }
+
+            if (addedPlayers.size() > 0) {
+                PlayerListItem packet = new PlayerListItem();
+                packet.setAction(PlayerListItem.Action.ADD_PLAYER);
+                packet.setItems(addedPlayers.toArray(PlayerListItem.Item[]::new));
                 player.unsafe().sendPacket(packet);
             }
         }
@@ -141,22 +168,31 @@ public class TabListManager extends Manager implements Listener {
             player.unsafe().sendPacket(packet);
         }
 
+        private String getDisplayName(ProxiedPlayer player, boolean isAfk) {
+            String customColor = getTabColor(player);
+            String displayName = player.getDisplayName();
+            if (isAfk) {
+                displayName = manager.getConfig().afkFormat.replace("{NAME}", displayName);
+            }
+
+            if (customColor != null) {
+                return "{\"extra\":[{\"color\":\"" +
+                        customColor +
+                        "\",\"text\":\"" +
+                        displayName +
+                        "\"}],\"text\":\"\"}";
+            }
+            return "{\"text\":\"" + displayName + "\"}";
+        }
+
         private String getTabColor(ProxiedPlayer player) {
             for (String key : manager.getConfig().globalTabColors.keySet()) {
-                if (player.hasPermission("hiddenite.chat." + key) || player.hasPermission("yoctochat." + key)) {
+                if (player.hasPermission("hiddenite.chat." + key)) {
                     return manager.getConfig().globalTabColors.get(key);
                 }
             }
             return null;
         }
-
-        @Override
-        public void onConnect() {
-            this.updateFakePlayers();
-        }
-
-        @Override
-        public void onDisconnect() {}
     }
 
     public TabListManager(ChatPlugin plugin) {

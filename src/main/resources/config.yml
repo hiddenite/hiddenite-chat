@@ -67,6 +67,8 @@ global_tab:
   # The header and footer of the tab list.
   header: "§aYour server\n"
   footer: "\n§a{PLAYERS}/{LIMIT}§b players online"
+  # How AFK players should be displayed in the list.
+  afk_format: "{NAME} (afk)"
   # Colors to use in the tab list, based on permissions.
   colors:
     # "admin" and "vip" are examples, you can use anything you want instead.

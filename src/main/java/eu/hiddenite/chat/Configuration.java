@@ -38,6 +38,7 @@ public class Configuration {
     public boolean globalTabEnabled;
     public String globalTabHeader;
     public String globalTabFooter;
+    public String afkFormat;
     public LinkedHashMap<String, String> globalTabColors = new LinkedHashMap<>();
 
     public boolean discordEnabled;
@@ -98,6 +99,7 @@ public class Configuration {
             globalTabEnabled = configuration.getBoolean("global_tab.enabled");
             globalTabHeader = configuration.getString("global_tab.header");
             globalTabFooter = configuration.getString("global_tab.footer");
+            afkFormat = configuration.getString("global_tab.afk_format");
             net.md_5.bungee.config.Configuration globalTabColorsSection = configuration.getSection("global_tab.colors");
             for (String key : globalTabColorsSection.getKeys()) {
                 globalTabColors.put(key, globalTabColorsSection.getString(key));
