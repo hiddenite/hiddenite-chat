@@ -11,6 +11,7 @@ import net.md_5.bungee.event.EventHandler;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.UUID;
 
 public class GeneralChatManager extends Manager implements Listener {
@@ -31,7 +32,7 @@ public class GeneralChatManager extends Manager implements Listener {
 
     @EventHandler
     public void onPlayerChat(ChatEvent event) {
-        if (!(event.getSender() instanceof ProxiedPlayer)) {
+        if (!(event.getSender() instanceof ProxiedPlayer sender)) {
             return;
         }
 
@@ -40,12 +41,15 @@ public class GeneralChatManager extends Manager implements Listener {
         }
         event.setCancelled(true);
 
-        ProxiedPlayer sender = (ProxiedPlayer)event.getSender();
-
         String chatFormat = getChatFormat(sender);
         String message = event.getMessage();
-        String formattedMessage = formatMessage(sender, chatFormat, message);
 
+        String upperMessage = message.toUpperCase();
+        if (getConfig().blockedMessages.stream().anyMatch(upperMessage::contains)) {
+            return;
+        }
+
+        String formattedMessage = formatMessage(sender, chatFormat, message);
         sendToEveryone(sender.getUniqueId(), formattedMessage);
     }
 

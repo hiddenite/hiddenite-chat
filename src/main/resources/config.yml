@@ -19,6 +19,10 @@ action_format:
   vip: "§6* {DISPLAY_NAME} §r{MESSAGE}"
   default: "* {DISPLAY_NAME} {MESSAGE}"
 
+# Messages containing the following strings won't be sent.
+blocked_messages:
+  - "I joined using ChatCraft from my Android device! Download it for free!"
+
 # Messages sent to everyone when someone joins or leaves.
 login:
   # Message sent when a player joins for the first time.

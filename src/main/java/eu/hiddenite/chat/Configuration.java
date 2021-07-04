@@ -11,12 +11,15 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Configuration {
     public String helloMessage;
 
     public LinkedHashMap<String, String> chatFormats = new LinkedHashMap<>();
     public LinkedHashMap<String, String> actionFormats = new LinkedHashMap<>();
+
+    public List<String> blockedMessages = new ArrayList<>();
 
     public String pmSentFormat;
     public String pmReceivedFormat;
@@ -76,6 +79,11 @@ public class Configuration {
             for (String key : actionSection.getKeys()) {
                 actionFormats.put(key, actionSection.getString(key));
             }
+
+            blockedMessages = configuration.getStringList("blocked_messages")
+                    .stream()
+                    .map(String::toUpperCase)
+                    .collect(Collectors.toList());
 
             pmUsage = configuration.getString("private_messages.usage");
             pmReplyUsage = configuration.getString("private_messages.reply_usage");
