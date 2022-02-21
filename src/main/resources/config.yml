@@ -81,6 +81,11 @@ global_tab:
     # Color that requires the "hiddenite.chat.vip" permission.
     vip: "gold"
 
+# Excluded servers in chat
+excluded_servers:
+  # List of all the servers with a separated chat
+  - lobby
+
 # Discord configuration.
 discord:
   # If enabled, all public messages will be sent to the specified Discord channel.
