@@ -9,7 +9,7 @@ public class GlobalMessageCommand extends Command {
     private final GeneralChatManager manager;
 
     public GlobalMessageCommand(GeneralChatManager manager) {
-        super("globalmessage", "hiddenite.chat.global_message", "gmsg");
+        super("globalmessage", "hiddenite.chat.global_chat", "gmsg");
         this.manager = manager;
     }
 

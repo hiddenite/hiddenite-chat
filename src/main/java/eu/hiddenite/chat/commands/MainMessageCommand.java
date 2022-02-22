@@ -5,11 +5,11 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 
-public class IncludedMessageCommand  extends Command {
+public class MainMessageCommand extends Command {
     private final GeneralChatManager manager;
 
-    public IncludedMessageCommand(GeneralChatManager manager) {
-        super("includedmessage", "hiddenite.chat.included_message", "imsg");
+    public MainMessageCommand(GeneralChatManager manager) {
+        super("mainmessage", "hiddenite.chat.global_chat", "mmsg");
         this.manager = manager;
     }
 
@@ -21,7 +21,7 @@ public class IncludedMessageCommand  extends Command {
 
         String message = String.join(" ", args);
 
-        manager.sendIncludedMessage((ProxiedPlayer) commandSender, message, false);
+        manager.sendMainMessage((ProxiedPlayer) commandSender, message, false);
     }
 
 }

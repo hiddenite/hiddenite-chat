@@ -1,15 +1,14 @@
 package eu.hiddenite.chat.managers;
 
 import eu.hiddenite.chat.ChatPlugin;
-import eu.hiddenite.chat.commands.ExcludedMessageCommand;
+import eu.hiddenite.chat.commands.ServerMessageCommand;
 import eu.hiddenite.chat.commands.GlobalMessageCommand;
-import eu.hiddenite.chat.commands.IncludedMessageCommand;
+import eu.hiddenite.chat.commands.MainMessageCommand;
 import eu.hiddenite.chat.commands.MeCommand;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.md_5.bungee.api.connection.Server;
 import net.md_5.bungee.api.event.ChatEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
@@ -33,8 +32,8 @@ public class GeneralChatManager extends Manager implements Listener {
 
         getProxy().getPluginManager().registerListener(getPlugin(), this);
         getProxy().getPluginManager().registerCommand(getPlugin(), new GlobalMessageCommand(this));
-        getProxy().getPluginManager().registerCommand(getPlugin(), new IncludedMessageCommand(this));
-        getProxy().getPluginManager().registerCommand(getPlugin(), new ExcludedMessageCommand(this));
+        getProxy().getPluginManager().registerCommand(getPlugin(), new MainMessageCommand(this));
+        getProxy().getPluginManager().registerCommand(getPlugin(), new ServerMessageCommand(this));
         getProxy().getPluginManager().registerCommand(getPlugin(), new MeCommand(this));
 
     }
@@ -53,7 +52,7 @@ public class GeneralChatManager extends Manager implements Listener {
         String message = event.getMessage();
 
         boolean isGlobalMessage = false;
-        if (message.startsWith("!") && sender.hasPermission("hiddenite.chat.global_message")) {
+        if (message.startsWith("!") && sender.hasPermission("hiddenite.chat.global_chat")) {
             isGlobalMessage = true;
             message = message.substring(1);
         }
@@ -70,7 +69,7 @@ public class GeneralChatManager extends Manager implements Listener {
         } else if (getConfig().excludedServers.contains(senderServerName)) {
             sendExcludedMessage(sender, message, false);
         } else {
-            sendIncludedMessage(sender, message, false);
+            sendMainMessage(sender, message, false);
         }
     }
 
@@ -82,7 +81,7 @@ public class GeneralChatManager extends Manager implements Listener {
         if (getConfig().excludedServers.contains(senderServerName)) {
             sendExcludedMessage(sender, formattedMessage, true);
         } else {
-            sendIncludedMessage(sender, formattedMessage, true);
+            sendMainMessage(sender, formattedMessage, true);
         }
     }
 
@@ -99,7 +98,7 @@ public class GeneralChatManager extends Manager implements Listener {
         sendToEveryone(sender, formattedMessage, targetServers, "global");
     }
 
-    public void sendIncludedMessage(ProxiedPlayer sender, String message, boolean formatted) {
+    public void sendMainMessage(ProxiedPlayer sender, String message, boolean formatted) {
         String formattedMessage;
         if (!formatted) formattedMessage = formatMessage(sender, getChatFormat(sender), message);
         else formattedMessage = message;
@@ -112,37 +111,38 @@ public class GeneralChatManager extends Manager implements Listener {
                 targetServers.add(serverInfo.getName());
             }
         }
-        sendToEveryone(sender, formattedMessage, targetServers, "included");
+        sendToEveryone(sender, formattedMessage, targetServers, "main");
     }
 
-    public void sendExcludedMessage(ProxiedPlayer sender, String message, String targetServer, boolean formatted) {
+    public void sendServerMessage(ProxiedPlayer sender, String message, List<String> targetServers, boolean formatted) {
         String formattedMessage;
         if (!formatted) formattedMessage = formatMessage(sender, getChatFormat(sender), message);
         else formattedMessage = message;
 
-        List<String> targetServers = new ArrayList<>();
-        targetServers.add(targetServer);
+        String messageOrigin = String.join(",", targetServers);
 
-        sendToEveryone(sender, formattedMessage, targetServers, targetServer);
+        sendToEveryone(sender, formattedMessage, targetServers, messageOrigin);
     }
 
     public void sendExcludedMessage(ProxiedPlayer sender, String message, boolean formatted) {
-        String targetServer = sender.getServer().getInfo().getName();
-        sendExcludedMessage(sender, message, targetServer, formatted);
+        List<String> targetServers = new ArrayList<>();
+        targetServers.add(sender.getServer().getInfo().getName());
+        sendServerMessage(sender, message, targetServers, formatted);
     }
 
     private void sendToEveryone(ProxiedPlayer sender, String formattedMessage, List<String> targetServers, String messageOrigin) {
         Collection<ProxiedPlayer> allPlayers = getProxy().getPlayers();
         BaseComponent[] messageComponents = TextComponent.fromLegacyText(formattedMessage);
 
-        getLogger().info("(" + messageOrigin + ") " + formattedMessage);
+        String consoleMessage = "(" + messageOrigin + ") " + formattedMessage;
+        BaseComponent[] consoleMessageComponents = TextComponent.fromLegacyText(consoleMessage);
+
+        getLogger().info(consoleMessage);
         for (ProxiedPlayer receiver : allPlayers) {
             if (targetServers.contains(receiver.getServer().getInfo().getName())) {
                 receiver.sendMessage(sender.getUniqueId(), messageComponents);
-            } else if (receiver.hasPermission("hiddenite.chat.global_message")) {
-                formattedMessage = "(" + messageOrigin + ") " + formattedMessage;
-                messageComponents = TextComponent.fromLegacyText(formattedMessage);
-                receiver.sendMessage(sender.getUniqueId(), messageComponents);
+            } else if (receiver.hasPermission("hiddenite.chat.global_chat")) {
+                receiver.sendMessage(sender.getUniqueId(), consoleMessageComponents);
             }
         }
 

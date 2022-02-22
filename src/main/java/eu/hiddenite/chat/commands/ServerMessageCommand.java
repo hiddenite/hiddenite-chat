@@ -8,13 +8,14 @@ import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-public class ExcludedMessageCommand extends Command implements TabExecutor {
+public class ServerMessageCommand extends Command implements TabExecutor {
     private final GeneralChatManager manager;
 
-    public ExcludedMessageCommand(GeneralChatManager manager) {
-        super("excludedmessage", "hiddenite.chat.excluded_message", "emsg");
+    public ServerMessageCommand(GeneralChatManager manager) {
+        super("servermessage", "hiddenite.chat.global_chat", "smsg");
         this.manager = manager;
     }
 
@@ -27,7 +28,7 @@ public class ExcludedMessageCommand extends Command implements TabExecutor {
             return;
         }
 
-        String targetServer = args[0];
+        List<String> targetServers = new ArrayList<>(Arrays.asList(args[0].split(",")));
 
         StringBuilder builder = new StringBuilder();
         for (int i = 1; i < args.length; i++) {
@@ -35,7 +36,7 @@ public class ExcludedMessageCommand extends Command implements TabExecutor {
         }
         String message = builder.toString();
 
-        manager.sendExcludedMessage((ProxiedPlayer) commandSender, message, targetServer, false);
+        manager.sendServerMessage((ProxiedPlayer) commandSender, message, targetServers, false);
     }
 
     @Override
