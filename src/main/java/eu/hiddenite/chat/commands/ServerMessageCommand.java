@@ -28,7 +28,19 @@ public class ServerMessageCommand extends Command implements TabExecutor {
             return;
         }
 
-        List<String> targetServers = new ArrayList<>(Arrays.asList(args[0].split(",")));
+        List<String> targetServers = new ArrayList<>();
+
+        List<String> proxyServers = new ArrayList<>();
+        for (ServerInfo serverInfo : manager.getProxy().getServers().values()) {
+            proxyServers.add(serverInfo.getName());
+        }
+
+        for (String targetServer : args[0].split(",")) {
+            if (!proxyServers.contains(targetServer)) {
+                return;
+            }
+            targetServers.add(targetServer);
+        }
 
         StringBuilder builder = new StringBuilder();
         for (int i = 1; i < args.length; i++) {
@@ -42,9 +54,18 @@ public class ServerMessageCommand extends Command implements TabExecutor {
     @Override
     public Iterable<String> onTabComplete(CommandSender commandSender, String[] args) {
         List<String> suggestions = new ArrayList<>();
+
         if (args.length == 1) {
+            List<String> chosenServers = Arrays.stream(args[0].split(",")).toList();
+            chosenServers.subList(0, chosenServers.size()-1);
+            String suggestion = String.join(",", chosenServers);
+
             for (ServerInfo serverInfo : manager.getProxy().getServers().values()) {
-                suggestions.add(serverInfo.getName());
+                if (!suggestion.equals("")) {
+                    suggestions.add(suggestion + "," + serverInfo.getName());
+                } else {
+                    suggestions.add(serverInfo.getName());
+                }
             }
         }
         return suggestions;
