@@ -44,6 +44,8 @@ public class Configuration {
     public String afkFormat;
     public LinkedHashMap<String, String> globalTabColors = new LinkedHashMap<>();
 
+    public List<String> excludedServers;
+
     public boolean discordEnabled;
     public String discordBotToken;
     public long discordChannelId;
@@ -112,6 +114,8 @@ public class Configuration {
             for (String key : globalTabColorsSection.getKeys()) {
                 globalTabColors.put(key, globalTabColorsSection.getString(key));
             }
+
+            excludedServers = configuration.getStringList("excluded_servers");
 
             discordEnabled = configuration.getBoolean("discord.enabled");
             discordBotToken = configuration.getString("discord.bot_token");

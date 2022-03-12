@@ -1,17 +1,15 @@
 package eu.hiddenite.chat.commands;
 
-import com.google.common.collect.ImmutableSet;
 import eu.hiddenite.chat.managers.GeneralChatManager;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
-import net.md_5.bungee.api.plugin.TabExecutor;
 
-public class MeCommand extends Command implements TabExecutor {
+public class GlobalMessageCommand extends Command {
     private final GeneralChatManager manager;
 
-    public MeCommand(GeneralChatManager manager) {
-        super("me", null);
+    public GlobalMessageCommand(GeneralChatManager manager) {
+        super("globalmessage", "hiddenite.chat.global_chat", "gmsg");
         this.manager = manager;
     }
 
@@ -23,11 +21,7 @@ public class MeCommand extends Command implements TabExecutor {
 
         String message = String.join(" ", args);
 
-        manager.sendActionMessage((ProxiedPlayer) commandSender, message);
+        manager.sendGlobalMessage((ProxiedPlayer) commandSender, message, false);
     }
 
-    @Override
-    public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
-        return ImmutableSet.of();
-    }
 }
