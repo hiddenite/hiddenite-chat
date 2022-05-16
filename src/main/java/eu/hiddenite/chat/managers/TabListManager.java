@@ -18,7 +18,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class TabListManager extends Manager implements Listener {
-    private static record TabListPlayer(UUID uuid, int gameMode, boolean isAfk, int latency) {}
+    private record TabListPlayer(UUID uuid, int gameMode, boolean isAfk, int latency) {}
 
     private static class CustomTabList extends TabList {
         private final TabListManager manager;
@@ -92,6 +92,7 @@ public class TabListManager extends Manager implements Listener {
         private void updateEverything() {
             Collection<ProxiedPlayer> allPlayers = ProxyServer.getInstance().getPlayers();
             Set<UUID> onlineIds = allPlayers.stream().map(ProxiedPlayer::getUniqueId).collect(Collectors.toSet());
+            int myGamemode = gameModes.getOrDefault(this.player.getUniqueId(), 0);
 
             // Compute removed players
             ArrayList<PlayerListItem.Item> removedPlayers = new ArrayList<>();
@@ -120,7 +121,19 @@ public class TabListManager extends Manager implements Listener {
                 String serverB = onlinePlayer.getServer() != null ? onlinePlayer.getServer().getInfo().getName() : "";
 
                 UUID uuid = onlinePlayer.getUniqueId();
-                int gameMode = serverA.equals(serverB) ? gameModes.getOrDefault(onlinePlayer.getUniqueId(), 0) : 3;
+
+                int gameMode;
+                if (serverA.equals(serverB)) {
+                    gameMode = gameModes.getOrDefault(onlinePlayer.getUniqueId(), 0);
+                    if (onlinePlayer != this.player && myGamemode != 3 && gameMode == 3) {
+                        // Hide spectators from non-spectators.
+                        gameMode = 0;
+                    }
+                } else {
+                    // Players on other servers are seen as spectator.
+                    gameMode = 3;
+                }
+
                 boolean isAfk = onlinePlayer.hasPermission("hiddenite.afk");
                 int ping = onlinePlayer.getPing();
 
