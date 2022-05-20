@@ -146,7 +146,13 @@ public class GeneralChatManager extends Manager implements Listener {
             }
         }
 
-        String discordMessage = TextComponent.toPlainText(messageComponents);
+        String discordMessage;
+        if (getConfig().discordLikeConsole) {
+            discordMessage = TextComponent.toPlainText(consoleMessageComponents);
+        } else {
+            discordMessage = TextComponent.toPlainText(messageComponents);
+        }
+
         DiscordManager.getInstance().sendMessage(discordMessage, DiscordManager.Style.NORMAL);
     }
 

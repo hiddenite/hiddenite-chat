@@ -90,6 +90,8 @@ excluded_servers:
 discord:
   # If enabled, all public messages will be sent to the specified Discord channel.
   enabled: false
+  # If the discord message log must be written like in the console (with the chat name).
+  like_console: false
   # Your private bot token.
   bot_token: "..."
   # Id of the channel where the messages should be sent.

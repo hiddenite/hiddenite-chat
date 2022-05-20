@@ -46,6 +46,8 @@ public class Configuration {
 
     public List<String> excludedServers;
 
+    public boolean discordLikeConsole;
+
     public boolean discordEnabled;
     public String discordBotToken;
     public long discordChannelId;
@@ -116,6 +118,8 @@ public class Configuration {
             }
 
             excludedServers = configuration.getStringList("excluded_servers");
+
+            discordLikeConsole = configuration.getBoolean("discord.like_console");
 
             discordEnabled = configuration.getBoolean("discord.enabled");
             discordBotToken = configuration.getString("discord.bot_token");
