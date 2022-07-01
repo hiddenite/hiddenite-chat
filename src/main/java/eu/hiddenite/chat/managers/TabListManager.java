@@ -9,6 +9,7 @@ import net.md_5.bungee.api.event.PostLoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.chat.ComponentSerializer;
 import net.md_5.bungee.event.EventHandler;
+import net.md_5.bungee.protocol.Property;
 import net.md_5.bungee.protocol.packet.PlayerListHeaderFooter;
 import net.md_5.bungee.protocol.packet.PlayerListItem;
 import net.md_5.bungee.tab.TabList;
@@ -147,7 +148,7 @@ public class TabListManager extends Manager implements Listener {
                 item.setUsername(onlinePlayer.getName());
                 item.setGamemode(gameMode);
                 item.setPing(onlinePlayer.getPing());
-                item.setProperties(new String[][] {});
+                item.setProperties(new Property[] {});
                 item.setDisplayName(getDisplayName(onlinePlayer, isAfk));
                 addedPlayers.add(item);
 
