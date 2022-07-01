@@ -49,6 +49,7 @@ public class Configuration {
     public boolean discordEnabled;
     public String discordBotToken;
     public long discordChannelId;
+    public boolean discordShowServerGroup;
 
     public boolean load(Plugin plugin) {
         if (!plugin.getDataFolder().exists()) {
@@ -120,6 +121,7 @@ public class Configuration {
             discordEnabled = configuration.getBoolean("discord.enabled");
             discordBotToken = configuration.getString("discord.bot_token");
             discordChannelId = configuration.getLong("discord.channel_id");
+            discordShowServerGroup = configuration.getBoolean("discord.show_server_group");
 
         } catch (IOException e) {
             e.printStackTrace();

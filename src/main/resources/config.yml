@@ -94,3 +94,5 @@ discord:
   bot_token: "..."
   # Id of the channel where the messages should be sent.
   channel_id: 123456
+  # Whether the discord message should show the chat name or not.
+  show_server_group: false
