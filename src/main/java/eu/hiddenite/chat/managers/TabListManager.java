@@ -12,6 +12,8 @@ import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.protocol.Property;
 import net.md_5.bungee.protocol.packet.PlayerListHeaderFooter;
 import net.md_5.bungee.protocol.packet.PlayerListItem;
+import net.md_5.bungee.protocol.packet.PlayerListItemRemove;
+import net.md_5.bungee.protocol.packet.PlayerListItemUpdate;
 import net.md_5.bungee.tab.TabList;
 
 import java.lang.reflect.Field;
@@ -39,23 +41,31 @@ public class TabListManager extends Manager implements Listener {
 
         @Override
         public void onUpdate(PlayerListItem playerListItem) {
-            this.handleGameModeChanges(playerListItem);
+            manager.getLogger().warning("Received an old update: onUpdate(PlayerListItem), type " +
+                    playerListItem.getAction().toString()
+            );
+        }
+
+        @Override
+        public void onUpdate(PlayerListItemUpdate playerListItemUpdate) {
+            for (PlayerListItemUpdate.Action action : playerListItemUpdate.getActions()) {
+                this.handleUpdates(action, playerListItemUpdate.getItems());
+            }
             this.sendUpdate(false);
-            if (playerListItem.getAction() == PlayerListItem.Action.UPDATE_LATENCY) {
-                player.unsafe().sendPacket(playerListItem);
+        }
+
+        @Override
+        public void onUpdate(PlayerListItemRemove playerListItemRemove) {
+            for (UUID uuid : playerListItemRemove.getUuids()) {
+                gameModes.remove(uuid);
             }
         }
 
-        private void handleGameModeChanges(PlayerListItem playerListItem) {
-            if (playerListItem.getAction() == PlayerListItem.Action.ADD_PLAYER ||
-                    playerListItem.getAction() == PlayerListItem.Action.UPDATE_GAMEMODE) {
-                for (PlayerListItem.Item item : playerListItem.getItems()) {
+        private void handleUpdates(PlayerListItemUpdate.Action action, PlayerListItem.Item[] items) {
+            if (action == PlayerListItemUpdate.Action.ADD_PLAYER ||
+                    action == PlayerListItemUpdate.Action.UPDATE_GAMEMODE) {
+                for (PlayerListItem.Item item : items) {
                     gameModes.put(item.getUuid(), item.getGamemode());
-                }
-            }
-            if (playerListItem.getAction() == PlayerListItem.Action.REMOVE_PLAYER) {
-                for (PlayerListItem.Item item : playerListItem.getItems()) {
-                    gameModes.remove(item.getUuid());
                 }
             }
         }
@@ -79,13 +89,8 @@ public class TabListManager extends Manager implements Listener {
         }
 
         private void clearEverything() {
-            PlayerListItem packet = new PlayerListItem();
-            packet.setAction(PlayerListItem.Action.REMOVE_PLAYER);
-            packet.setItems(players.values().stream().map(x -> {
-                PlayerListItem.Item item = new PlayerListItem.Item();
-                item.setUuid(x.uuid);
-                return item;
-            }).toArray(PlayerListItem.Item[]::new));
+            PlayerListItemRemove packet = new PlayerListItemRemove();
+            packet.setUuids(players.values().stream().map(x -> x.uuid).toArray(UUID[]::new));
             player.unsafe().sendPacket(packet);
             players.clear();
         }
@@ -96,7 +101,7 @@ public class TabListManager extends Manager implements Listener {
             int myGamemode = gameModes.getOrDefault(this.player.getUniqueId(), 0);
 
             // Compute removed players
-            ArrayList<PlayerListItem.Item> removedPlayers = new ArrayList<>();
+            ArrayList<UUID> removedPlayers = new ArrayList<>();
 
             for (TabListPlayer tabPlayer : players.values()) {
                 if (onlineIds.contains(tabPlayer.uuid)) {
@@ -104,13 +109,12 @@ public class TabListManager extends Manager implements Listener {
                 }
                 PlayerListItem.Item item = new PlayerListItem.Item();
                 item.setUuid(tabPlayer.uuid);
-                removedPlayers.add(item);
+                removedPlayers.add(tabPlayer.uuid);
             }
 
             if (removedPlayers.size() > 0) {
-                PlayerListItem packet = new PlayerListItem();
-                packet.setAction(PlayerListItem.Action.REMOVE_PLAYER);
-                packet.setItems(removedPlayers.toArray(PlayerListItem.Item[]::new));
+                PlayerListItemRemove packet = new PlayerListItemRemove();
+                packet.setUuids(removedPlayers.toArray(UUID[]::new));
                 player.unsafe().sendPacket(packet);
             }
 
@@ -146,9 +150,10 @@ public class TabListManager extends Manager implements Listener {
                 PlayerListItem.Item item = new PlayerListItem.Item();
                 item.setUuid(onlinePlayer.getUniqueId());
                 item.setUsername(onlinePlayer.getName());
+                item.setProperties(new Property[] {});
+                item.setListed(true);
                 item.setGamemode(gameMode);
                 item.setPing(onlinePlayer.getPing());
-                item.setProperties(new Property[] {});
                 item.setDisplayName(getDisplayName(onlinePlayer, isAfk));
                 addedPlayers.add(item);
 
@@ -156,8 +161,14 @@ public class TabListManager extends Manager implements Listener {
             }
 
             if (addedPlayers.size() > 0) {
-                PlayerListItem packet = new PlayerListItem();
-                packet.setAction(PlayerListItem.Action.ADD_PLAYER);
+                PlayerListItemUpdate packet = new PlayerListItemUpdate();
+                packet.setActions(EnumSet.of(
+                        PlayerListItemUpdate.Action.ADD_PLAYER,
+                        PlayerListItemUpdate.Action.UPDATE_GAMEMODE,
+                        PlayerListItemUpdate.Action.UPDATE_LISTED,
+                        PlayerListItemUpdate.Action.UPDATE_LATENCY,
+                        PlayerListItemUpdate.Action.UPDATE_DISPLAY_NAME
+                ));
                 packet.setItems(addedPlayers.toArray(PlayerListItem.Item[]::new));
                 player.unsafe().sendPacket(packet);
             }
@@ -230,7 +241,6 @@ public class TabListManager extends Manager implements Listener {
             Field f = UserConnection.class.getDeclaredField("tabListHandler");
             f.setAccessible(true);
             f.set(player, customTabList);
-            customTabList.onConnect();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
