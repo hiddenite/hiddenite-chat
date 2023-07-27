@@ -1,15 +1,13 @@
 package eu.hiddenite.chat.commands;
 
-import com.google.common.collect.ImmutableSet;
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.SimpleCommand;
+import com.velocitypowered.api.proxy.Player;
 import eu.hiddenite.chat.Configuration;
 import eu.hiddenite.chat.managers.PrivateMessageManager;
-import net.md_5.bungee.api.CommandSender;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.md_5.bungee.api.plugin.Command;
-import net.md_5.bungee.api.plugin.TabExecutor;
+import net.kyori.adventure.text.Component;
 
-public class ReplyCommand extends Command implements TabExecutor {
+public class ReplyCommand implements SimpleCommand {
     private final PrivateMessageManager manager;
 
     private Configuration getConfig() {
@@ -17,25 +15,25 @@ public class ReplyCommand extends Command implements TabExecutor {
     }
 
     public ReplyCommand(PrivateMessageManager manager) {
-        super("r");
         this.manager = manager;
     }
-
     @Override
-    public void execute(CommandSender commandSender, String[] args) {
-        if (!(commandSender instanceof ProxiedPlayer)) {
+    public void execute(final Invocation invocation) {
+        CommandSource source = invocation.source();
+        String[] args = invocation.arguments();
+
+        if (!(source instanceof Player sender)) {
             return;
         }
 
-        ProxiedPlayer sender = (ProxiedPlayer)commandSender;
         if (args.length < 1) {
-            sender.sendMessage(TextComponent.fromLegacyText(getConfig().pmReplyUsage));
+            sender.sendMessage(Component.text(getConfig().privateMessages.replyUsage));
             return;
         }
 
-        ProxiedPlayer receiver = manager.getLastPrivateMessageSender(sender);
+        Player receiver = manager.getLastPrivateMessageSender(sender);
         if (receiver == null) {
-            sender.sendMessage(TextComponent.fromLegacyText(getConfig().pmErrorNoReply));
+            sender.sendMessage(Component.text(getConfig().privateMessages.errorNoReply));
             return;
         }
 
@@ -44,8 +42,4 @@ public class ReplyCommand extends Command implements TabExecutor {
         manager.sendPrivateMessage(sender, receiver, message);
     }
 
-    @Override
-    public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
-        return ImmutableSet.of();
-    }
 }

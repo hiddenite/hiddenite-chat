@@ -1,31 +1,32 @@
 package eu.hiddenite.chat.commands;
 
-import com.google.common.collect.ImmutableSet;
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.SimpleCommand;
 import eu.hiddenite.chat.ChatPlugin;
-import net.md_5.bungee.api.CommandSender;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.api.plugin.Command;
-import net.md_5.bungee.api.plugin.TabExecutor;
+import net.kyori.adventure.text.Component;
 
-public class ReloadCommand extends Command implements TabExecutor {
+public class ReloadCommand implements SimpleCommand {
     private final ChatPlugin plugin;
 
     public ReloadCommand(ChatPlugin plugin) {
-        super("hiddenite:chat:reload", "hiddenite.chat.reload");
         this.plugin = plugin;
     }
 
     @Override
-    public void execute(CommandSender commandSender, String[] args) {
-        if (plugin.reloadConfiguration()) {
-            commandSender.sendMessage(new TextComponent("Reloaded successfully."));
+    public void execute(final SimpleCommand.Invocation invocation) {
+        CommandSource source = invocation.source();
+        String[] args = invocation.arguments();
+
+        if (plugin.loadConfiguration()) {
+            source.sendMessage(Component.text("Reloaded successfully."));
         } else {
-            commandSender.sendMessage(new TextComponent("Could not reload the configuration."));
+            source.sendMessage(Component.text("Could not reload the configuration."));
         }
     }
 
     @Override
-    public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
-        return ImmutableSet.of();
+    public boolean hasPermission(final SimpleCommand.Invocation invocation) {
+        return invocation.source().hasPermission("hiddenite.chat.reload");
     }
+
 }

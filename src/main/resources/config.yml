@@ -2,56 +2,56 @@
 hello: "§6Welcome to the server.\nCheck out our website: www.your-server.com"
 
 # Chat format, based on permissions.
-chat_format:
+chat-format:
   # "admin" and "vip" are examples, you can use anything you want instead.
   # Chat format that requires the "hiddenite.chat.admin" permission.
-  admin: "§c<[Admin] {DISPLAY_NAME}> §r{MESSAGE}"
+  admin: "§c<[Admin] {NAME}> §r{MESSAGE}"
   # Chat format that requires the "hiddenite.chat.vip" permission.
-  vip: "§6<[VIP] {DISPLAY_NAME}> §r{MESSAGE}"
+  vip: "§6<[VIP] {NAME}> §r{MESSAGE}"
 
   # The last entry is the default chat format, used by everyone else.
-  default: "<{DISPLAY_NAME}> {MESSAGE}"
+  default: "<{NAME}> {MESSAGE}"
 
 # Action format, based on permissions.
-# Works the same way as chat_format, but for the /me command instead.
-action_format:
-  admin: "§c* {DISPLAY_NAME} §r{MESSAGE}"
-  vip: "§6* {DISPLAY_NAME} §r{MESSAGE}"
-  default: "* {DISPLAY_NAME} {MESSAGE}"
+# Works the same way as chat-format, but for the /me command instead.
+action-format:
+  admin: "§c* {NAME} §r{MESSAGE}"
+  vip: "§6* {NAME} §r{MESSAGE}"
+  default: "* {NAME} {MESSAGE}"
 
 # Messages containing the following strings won't be sent.
-blocked_messages:
+blocked-messages:
   - "I joined using ChatCraft from my Android device! Download it for free!"
 
 # Messages sent to everyone when someone joins or leaves.
 login:
   # Message sent when a player joins for the first time.
-  welcome_message: "§e{DISPLAY_NAME} §ojoined the server for the first time!"
+  welcome-message: "§e{NAME} §ojoined the server for the first time!"
   # Message sent when a player joins.
-  login_message: "§e{DISPLAY_NAME} §ologged in."
+  login-message: "§e{NAME} §ologged in."
   # Message sent when a player leaves.
-  logout_message: "§e{DISPLAY_NAME} §ologged out."
+  logout-message: "§e{NAME} §ologged out."
   # Player limit after which login and logout messages are no longer sent.
   # This is mostly to prevent spam on large servers. Welcome messages are unaffected.
-  online_players_limit: 30
+  online-players-limit: 30
 
 # Private messages configuration.
-private_messages:
+private-messages:
   # Sent when the command is used without enough arguments.
   usage: "/msg <player> <message>"
   # Sent when the reply command is used with no argument.
-  reply_usage: "/r <message>"
+  reply-usage: "/r <message>"
   # Message sent to the sender.
-  sent: "§7to {DISPLAY_NAME}: {MESSAGE}"
+  sent: "§7to {NAME}: {MESSAGE}"
   # Message sent to the receiver.
-  received: "§7from {DISPLAY_NAME}: {MESSAGE}"
+  received: "§7from {NAME}: {MESSAGE}"
   # Message sent to the sender when the receiver is offline.
-  error_not_found: "§cPlayer {RECEIVER} not found."
+  error-not-found: "§cPlayer {RECEIVER} not found."
   # Message sent to the sender when there is no one to reply to.
-  error_no_reply: "§cNo one to reply to."
+  error-no-reply: "§cNo one to reply to."
 
 # Auto-messages configuration.
-auto_messages:
+auto-messages:
   # If enabled, the messages below will the sent automatically at a regular interval.
   enabled: false
   # Interval between each message, in seconds.
@@ -65,24 +65,24 @@ auto_messages:
     - "Don't forget to drink water."
 
 # Global tab configuration.
-global_tab:
+global-tab:
   # If enabled, a custom tab containing every player from every server will be used.
   enabled: false
   # The header and footer of the tab list.
   header: "§aYour server\n"
   footer: "\n§a{PLAYERS}/{LIMIT}§b players online"
   # How AFK players should be displayed in the list.
-  afk_format: "{NAME} (afk)"
+  afk-format: "{DISPLAY-NAME} (afk)"
   # Colors to use in the tab list, based on permissions.
-  colors:
+  display-name-formats:
     # "admin" and "vip" are examples, you can use anything you want instead.
-    # Color that requires the "hiddenite.chat.admin" permission.
-    admin: "red"
-    # Color that requires the "hiddenite.chat.vip" permission.
-    vip: "gold"
+    # Display name that requires the "hiddenite.chat.admin" permission.
+    admin: "§c{NAME}"
+    # Display name that requires the "hiddenite.chat.vip" permission.
+    vip: "§6{NAME}"
 
 # Excluded servers in chat
-excluded_servers:
+excluded-servers:
   # List of all the servers with a separated chat
   - lobby
 
@@ -91,8 +91,8 @@ discord:
   # If enabled, all public messages will be sent to the specified Discord channel.
   enabled: false
   # Your private bot token.
-  bot_token: "..."
+  bot-token: "..."
   # Id of the channel where the messages should be sent.
-  channel_id: 123456
+  channel-id: 123456
   # Whether the discord message should show the chat name or not.
-  show_server_group: false
+  show-server-group: false

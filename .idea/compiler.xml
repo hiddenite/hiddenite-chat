@@ -7,7 +7,6 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="HiddeniteChat" />
-        <module name="hiddenite-chat" />
       </profile>
     </annotationProcessing>
   </component>

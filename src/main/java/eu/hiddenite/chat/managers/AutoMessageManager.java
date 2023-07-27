@@ -1,14 +1,13 @@
 package eu.hiddenite.chat.managers;
 
 import eu.hiddenite.chat.ChatPlugin;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.api.plugin.Listener;
+import net.kyori.adventure.text.Component;
 
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-public class AutoMessageManager extends Manager implements Listener {
+public class AutoMessageManager extends Manager {
     private final Random random = new Random();
     private final ArrayList<String> currentMessages = new ArrayList<>();
 
@@ -18,27 +17,23 @@ public class AutoMessageManager extends Manager implements Listener {
 
     @Override
     public void onEnable() {
-        if (!getConfig().autoMessagesEnabled || getConfig().autoMessagesList.isEmpty()) {
+        if (!getConfig().autoMessages.enabled || getConfig().autoMessages.messages.isEmpty()) {
             return;
         }
 
-        getProxy().getScheduler().schedule(getPlugin(),
-                this::sendRandomMessage,
-                getConfig().autoMessagesInterval,
-                getConfig().autoMessagesInterval,
-                TimeUnit.SECONDS);
+        getProxy().getScheduler().buildTask(getPlugin(), this::sendRandomMessage).repeat(getConfig().autoMessages.interval, TimeUnit.SECONDS).schedule();
 
-        getLogger().info("Loaded " + getConfig().autoMessagesList.size() + " messages, sending every " + getConfig().autoMessagesInterval + " seconds.");
+        getLogger().info("Loaded " + getConfig().autoMessages.messages.size() + " messages, sending every " + getConfig().autoMessages.interval + " seconds.");
     }
 
     private void sendRandomMessage() {
-        String message = getConfig().autoMessagesHeader + getRandomMessage();
-        getProxy().broadcast(TextComponent.fromLegacyText(message));
+        String message = getConfig().autoMessages.header + getRandomMessage();
+        getProxy().sendMessage(Component.text(message));
     }
 
     private String getRandomMessage() {
         if (currentMessages.size() == 0) {
-            currentMessages.addAll(getConfig().autoMessagesList);
+            currentMessages.addAll(getConfig().autoMessages.messages);
         }
         return currentMessages.remove(random.nextInt(currentMessages.size()));
     }

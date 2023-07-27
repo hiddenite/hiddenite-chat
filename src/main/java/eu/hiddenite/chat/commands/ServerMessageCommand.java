@@ -1,27 +1,28 @@
 package eu.hiddenite.chat.commands;
 
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.SimpleCommand;
+import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import eu.hiddenite.chat.managers.GeneralChatManager;
-import net.md_5.bungee.api.CommandSender;
-import net.md_5.bungee.api.config.ServerInfo;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.md_5.bungee.api.plugin.Command;
-import net.md_5.bungee.api.plugin.TabExecutor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ServerMessageCommand extends Command implements TabExecutor {
+public class ServerMessageCommand implements SimpleCommand {
     private final GeneralChatManager manager;
 
     public ServerMessageCommand(GeneralChatManager manager) {
-        super("servermessage", "hiddenite.chat.global_chat", "smsg");
         this.manager = manager;
     }
 
     @Override
-    public void execute(CommandSender commandSender, String[] args) {
-        if (!(commandSender instanceof ProxiedPlayer)) {
+    public void execute(final Invocation invocation) {
+        CommandSource source = invocation.source();
+        String[] args = invocation.arguments();
+
+        if (!(source instanceof Player player)) {
             return;
         }
         if (args.length < 2) {
@@ -31,8 +32,8 @@ public class ServerMessageCommand extends Command implements TabExecutor {
         List<String> targetServers = new ArrayList<>();
 
         List<String> proxyServers = new ArrayList<>();
-        for (ServerInfo serverInfo : manager.getProxy().getServers().values()) {
-            proxyServers.add(serverInfo.getName());
+        for (RegisteredServer registeredServer : manager.getProxy().getAllServers()) {
+            proxyServers.add(registeredServer.getServerInfo().getName());
         }
 
         for (String targetServer : args[0].split(",")) {
@@ -48,11 +49,19 @@ public class ServerMessageCommand extends Command implements TabExecutor {
         }
         String message = builder.toString();
 
-        manager.sendServerMessage((ProxiedPlayer) commandSender, message, targetServers, false);
+        manager.sendServerMessage(player, message, targetServers, false);
     }
 
     @Override
-    public Iterable<String> onTabComplete(CommandSender commandSender, String[] args) {
+    public boolean hasPermission(final Invocation invocation) {
+        return invocation.source().hasPermission("hiddenite.chat.global-chat");
+    }
+
+    @Override
+    public List<String> suggest(Invocation invocation) {
+        CommandSource source = invocation.source();
+        String[] args = invocation.arguments();
+
         List<String> suggestions = new ArrayList<>();
 
         if (args.length == 1) {
@@ -60,11 +69,11 @@ public class ServerMessageCommand extends Command implements TabExecutor {
             chosenServers.subList(0, chosenServers.size()-1);
             String suggestion = String.join(",", chosenServers);
 
-            for (ServerInfo serverInfo : manager.getProxy().getServers().values()) {
+            for (RegisteredServer registeredServer : manager.getProxy().getAllServers()) {
                 if (!suggestion.equals("")) {
-                    suggestions.add(suggestion + "," + serverInfo.getName());
+                    suggestions.add(suggestion + "," + registeredServer.getServerInfo().getName());
                 } else {
-                    suggestions.add(serverInfo.getName());
+                    suggestions.add(registeredServer.getServerInfo().getName());
                 }
             }
         }

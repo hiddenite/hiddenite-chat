@@ -1,58 +1,55 @@
 package eu.hiddenite.chat.managers;
 
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.player.PlayerChatEvent;
+import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import eu.hiddenite.chat.ChatPlugin;
 import eu.hiddenite.chat.commands.ServerMessageCommand;
 import eu.hiddenite.chat.commands.GlobalMessageCommand;
 import eu.hiddenite.chat.commands.MainMessageCommand;
 import eu.hiddenite.chat.commands.MeCommand;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.api.config.ServerInfo;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.md_5.bungee.api.event.ChatEvent;
-import net.md_5.bungee.api.plugin.Listener;
-import net.md_5.bungee.event.EventHandler;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-public class GeneralChatManager extends Manager implements Listener {
+public class GeneralChatManager extends Manager {
     public GeneralChatManager(ChatPlugin plugin) {
         super(plugin);
     }
 
     @Override
     public void onEnable() {
-        if (getConfig().chatFormats.size() == 0 || getConfig().actionFormats.size() == 0) {
-            getLogger().warning("No chat or no action format found in the configuration.");
+        if (getConfig().chatFormat.size() == 0 || getConfig().actionFormat.size() == 0) {
+            getLogger().warn("No chat or no action format found in the configuration.");
             return;
         }
 
-        getProxy().getPluginManager().registerListener(getPlugin(), this);
-        getProxy().getPluginManager().registerCommand(getPlugin(), new GlobalMessageCommand(this));
-        getProxy().getPluginManager().registerCommand(getPlugin(), new MainMessageCommand(this));
-        getProxy().getPluginManager().registerCommand(getPlugin(), new ServerMessageCommand(this));
-        getProxy().getPluginManager().registerCommand(getPlugin(), new MeCommand(this));
-
+        getPlugin().registerListener(this);
+        getPlugin().registerCommand("gmsg", new GlobalMessageCommand(this));
+        getPlugin().registerCommand("mmsg", new MainMessageCommand(this));
+        getPlugin().registerCommand("smsg", new ServerMessageCommand(this));
+        getPlugin().registerCommand("me", new MeCommand(this));
     }
 
-    @EventHandler
-    public void onPlayerChat(ChatEvent event) {
-        if (!(event.getSender() instanceof ProxiedPlayer sender)) {
-            return;
-        }
+    @Subscribe
+    public void onPlayerChat(PlayerChatEvent event) {
+        Player sender = event.getPlayer();
 
         if (event.getMessage().startsWith("/")) {
             return;
         }
-        event.setCancelled(true);
+
+        event.setResult(PlayerChatEvent.ChatResult.denied());
 
         String message = event.getMessage();
 
         boolean isGlobalMessage = false;
-        if (message.startsWith("!") && sender.hasPermission("hiddenite.chat.global_chat")) {
+        if (message.startsWith("!") && sender.hasPermission("hiddenite.chat.global-chat")) {
             isGlobalMessage = true;
             message = message.substring(1);
         }
@@ -62,7 +59,7 @@ public class GeneralChatManager extends Manager implements Listener {
             return;
         }
 
-        String senderServerName = sender.getServer().getInfo().getName();
+        String senderServerName = sender.getCurrentServer().get().getServerInfo().getName();
 
         if (isGlobalMessage) {
             sendGlobalMessage(sender, message, false);
@@ -73,11 +70,11 @@ public class GeneralChatManager extends Manager implements Listener {
         }
     }
 
-    public void sendActionMessage(ProxiedPlayer sender, String message) {
+    public void sendActionMessage(Player sender, String message) {
         String actionFormat = getActionFormat(sender);
         String formattedMessage = formatMessage(sender, actionFormat, message);
 
-        String senderServerName = sender.getServer().getInfo().getName();
+        String senderServerName = sender.getCurrentServer().get().getServerInfo().getName();
         if (getConfig().excludedServers.contains(senderServerName)) {
             sendExcludedMessage(sender, formattedMessage, true);
         } else {
@@ -85,20 +82,20 @@ public class GeneralChatManager extends Manager implements Listener {
         }
     }
 
-    public void sendGlobalMessage(ProxiedPlayer sender, String message, boolean formatted) {
+    public void sendGlobalMessage(Player sender, String message, boolean formatted) {
         String formattedMessage;
         if (!formatted) formattedMessage = formatMessage(sender, getChatFormat(sender), message);
         else formattedMessage = message;
 
 
         List<String> targetServers = new ArrayList<>();
-        for (ServerInfo serverInfo : getProxy().getServers().values()) {
-            targetServers.add(serverInfo.getName());
+        for (RegisteredServer registeredServer : getProxy().getAllServers()) {
+            targetServers.add(registeredServer.getServerInfo().getName());
         }
         sendToEveryone(sender, formattedMessage, targetServers, "global");
     }
 
-    public void sendMainMessage(ProxiedPlayer sender, String message, boolean formatted) {
+    public void sendMainMessage(Player sender, String message, boolean formatted) {
         String formattedMessage;
         if (!formatted) formattedMessage = formatMessage(sender, getChatFormat(sender), message);
         else formattedMessage = message;
@@ -106,15 +103,15 @@ public class GeneralChatManager extends Manager implements Listener {
         List<String> excludedServers = getConfig().excludedServers;
 
         List<String> targetServers = new ArrayList<>();
-        for (ServerInfo serverInfo : getProxy().getServers().values()) {
-            if (!excludedServers.contains(serverInfo.getName())) {
-                targetServers.add(serverInfo.getName());
+        for (RegisteredServer registeredServer : getProxy().getAllServers()) {
+            if (!excludedServers.contains(registeredServer.getServerInfo().getName())) {
+                targetServers.add(registeredServer.getServerInfo().getName());
             }
         }
         sendToEveryone(sender, formattedMessage, targetServers, "main");
     }
 
-    public void sendServerMessage(ProxiedPlayer sender, String message, List<String> targetServers, boolean formatted) {
+    public void sendServerMessage(Player sender, String message, List<String> targetServers, boolean formatted) {
         String formattedMessage;
         if (!formatted) formattedMessage = formatMessage(sender, getChatFormat(sender), message);
         else formattedMessage = message;
@@ -124,51 +121,48 @@ public class GeneralChatManager extends Manager implements Listener {
         sendToEveryone(sender, formattedMessage, targetServers, messageOrigin);
     }
 
-    public void sendExcludedMessage(ProxiedPlayer sender, String message, boolean formatted) {
+    public void sendExcludedMessage(Player sender, String message, boolean formatted) {
         List<String> targetServers = new ArrayList<>();
-        targetServers.add(sender.getServer().getInfo().getName());
+        targetServers.add(sender.getCurrentServer().get().getServerInfo().getName());
         sendServerMessage(sender, message, targetServers, formatted);
     }
 
-    private void sendToEveryone(ProxiedPlayer sender, String formattedMessage, List<String> targetServers, String messageOrigin) {
-        Collection<ProxiedPlayer> allPlayers = getProxy().getPlayers();
-        BaseComponent[] messageComponents = TextComponent.fromLegacyText(formattedMessage);
+    private void sendToEveryone(Player sender, String formattedMessage, List<String> targetServers, String messageOrigin) {
+        Collection<Player> allPlayers = getProxy().getAllPlayers();
+        TextComponent messageComponent = Component.text(formattedMessage);
 
         String consoleMessage = "(" + messageOrigin + ") " + formattedMessage;
-        BaseComponent[] consoleMessageComponents = TextComponent.fromLegacyText(consoleMessage);
+        TextComponent consoleMessageComponent = Component.text(consoleMessage);
 
         getLogger().info(consoleMessage);
-        for (ProxiedPlayer receiver : allPlayers) {
-            if (targetServers.contains(receiver.getServer().getInfo().getName())) {
-                receiver.sendMessage(sender.getUniqueId(), messageComponents);
-            } else if (receiver.hasPermission("hiddenite.chat.global_chat")) {
-                receiver.sendMessage(sender.getUniqueId(), consoleMessageComponents);
+        for (Player receiver : allPlayers) {
+            if (targetServers.contains(receiver.getCurrentServer().get().getServerInfo().getName())) {
+                receiver.sendMessage(sender, messageComponent);
+            } else if (receiver.hasPermission("hiddenite.chat.global-chat")) {
+                receiver.sendMessage(sender, consoleMessageComponent);
             }
         }
 
-        String discordMessage = TextComponent.toPlainText(
-                getConfig().discordShowServerGroup ? consoleMessageComponents : messageComponents
-        );
+        String discordMessage = (getConfig().discord.showServerGroup ? consoleMessageComponent : messageComponent).content().replaceAll("§.", "");
         DiscordManager.getInstance().sendMessage(discordMessage, DiscordManager.Style.NORMAL);
     }
 
-    private String getChatFormat(ProxiedPlayer player) {
-        return getFormat(player, getConfig().chatFormats);
-
+    private String getChatFormat(Player player) {
+        return getFormat(player, getConfig().chatFormat);
     }
 
-    private String getActionFormat(ProxiedPlayer player) {
-        return getFormat(player, getConfig().actionFormats);
+    private String getActionFormat(Player player) {
+        return getFormat(player, getConfig().actionFormat);
     }
 
-    private static String formatMessage(ProxiedPlayer sender, String format, String message) {
+    private static String formatMessage(Player sender, String format, String message) {
         return format
-                .replace("{NAME}", sender.getName())
-                .replace("{DISPLAY_NAME}", sender.getDisplayName())
+                .replace("{NAME}", sender.getUsername())
+                //.replace("{DISPLAY_NAME}", sender.getDisplayName())
                 .replace("{MESSAGE}", message);
     }
 
-    private static String getFormat(ProxiedPlayer player, LinkedHashMap<String, String> formats) {
+    private static String getFormat(Player player, LinkedHashMap<String, String> formats) {
         String last = null;
         for (String key : formats.keySet()) {
             last = key;

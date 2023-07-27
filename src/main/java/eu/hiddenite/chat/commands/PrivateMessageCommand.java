@@ -1,20 +1,16 @@
 package eu.hiddenite.chat.commands;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.SimpleCommand;
+import com.velocitypowered.api.proxy.Player;
 import eu.hiddenite.chat.Configuration;
 import eu.hiddenite.chat.managers.PrivateMessageManager;
-import net.md_5.bungee.api.CommandSender;
-import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.md_5.bungee.api.plugin.Command;
-import net.md_5.bungee.api.plugin.TabExecutor;
+import net.kyori.adventure.text.Component;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
-public class PrivateMessageCommand extends Command implements TabExecutor {
+public class PrivateMessageCommand implements SimpleCommand {
     private final PrivateMessageManager manager;
 
     private Configuration getConfig() {
@@ -22,28 +18,30 @@ public class PrivateMessageCommand extends Command implements TabExecutor {
     }
 
     public PrivateMessageCommand(PrivateMessageManager manager) {
-        super("msg", null, "w", "m", "tell", "t");
         this.manager = manager;
     }
 
     @Override
-    public void execute(CommandSender commandSender, String[] args) {
-        if (!(commandSender instanceof ProxiedPlayer)) {
+    public void execute(final SimpleCommand.Invocation invocation) {
+        CommandSource source = invocation.source();
+        String[] args = invocation.arguments();
+
+        if (!(source instanceof Player sender)) {
             return;
         }
 
-        ProxiedPlayer sender = (ProxiedPlayer)commandSender;
         if (args.length < 2) {
-            sender.sendMessage(TextComponent.fromLegacyText(getConfig().pmUsage));
+            sender.sendMessage(Component.text(getConfig().privateMessages.usage));
             return;
         }
 
-        ProxiedPlayer receiver = ProxyServer.getInstance().getPlayer(args[0]);
-        if (receiver == null) {
-            String errorMessage = getConfig().pmErrorNotFound.replace("{RECEIVER}", args[0]);
-            sender.sendMessage(TextComponent.fromLegacyText(errorMessage));
+        if (manager.getProxy().getPlayer(args[0]).isEmpty()) {
+            String errorMessage = getConfig().privateMessages.errorNotFound.replace("{RECEIVER}", args[0]);
+            sender.sendMessage(Component.text(errorMessage));
             return;
         }
+
+        Player receiver = manager.getProxy().getPlayer(args[0]).get();
 
         String[] messageWords = Arrays.copyOfRange(args, 1, args.length);
         String message = String.join(" ", messageWords);
@@ -52,18 +50,22 @@ public class PrivateMessageCommand extends Command implements TabExecutor {
     }
 
     @Override
-    public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
+    public List<String> suggest(Invocation invocation) {
+        CommandSource source = invocation.source();
+        String[] args = invocation.arguments();
+
         if (args.length == 1) {
-            Set<String> matches = new HashSet<>();
+            List<String> matches = new ArrayList<>();
             String search = args[0].toUpperCase();
-            for (ProxiedPlayer player : ProxyServer.getInstance().getPlayers()) {
-                if (player.getName().toUpperCase().startsWith(search)) {
-                    matches.add(player.getName());
+            for (Player player : manager.getProxy().getAllPlayers()) {
+                if (player.getUsername().toUpperCase().startsWith(search)) {
+                    matches.add(player.getUsername());
                 }
             }
             return matches;
         }
 
-        return ImmutableSet.of();
+        return ImmutableList.of();
     }
+
 }
