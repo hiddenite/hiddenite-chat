@@ -1,21 +1,20 @@
 package eu.hiddenite.chat.managers;
 
 import com.google.gson.*;
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.connection.DisconnectEvent;
+import com.velocitypowered.api.event.connection.PostLoginEvent;
+import com.velocitypowered.api.proxy.Player;
 import eu.hiddenite.chat.ChatPlugin;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.md_5.bungee.api.event.PlayerDisconnectEvent;
-import net.md_5.bungee.api.event.PostLoginEvent;
-import net.md_5.bungee.api.plugin.Listener;
-import net.md_5.bungee.event.EventHandler;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 
 import java.io.*;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
 
-public class LoginMessageManager extends Manager implements Listener {
+public class LoginMessageManager extends Manager {
     private final HashSet<UUID> knownUsers = new HashSet<>();
 
     public LoginMessageManager(ChatPlugin plugin) {
@@ -25,62 +24,62 @@ public class LoginMessageManager extends Manager implements Listener {
     @Override
     public void onEnable() {
         loadKnownUsers();
-        getProxy().getPluginManager().registerListener(getPlugin(), this);
+        getPlugin().registerListener(this);
     }
 
-    @EventHandler
+    @Subscribe
     public void onPostLoginEvent(PostLoginEvent event) {
         boolean hasPlayedBefore = true;
         synchronized (knownUsers) {
             if (!knownUsers.contains(event.getPlayer().getUniqueId())) {
-                getLogger().info(event.getPlayer().getName() + " (" + event.getPlayer().getUniqueId() + ") joined for the first time");
+                getLogger().info(event.getPlayer().getUsername() + " (" + event.getPlayer().getUniqueId() + ") joined for the first time");
                 hasPlayedBefore = false;
                 knownUsers.add(event.getPlayer().getUniqueId());
-                getProxy().getScheduler().runAsync(getPlugin(), this::saveKnownUsers);
+                getProxy().getScheduler().buildTask(getPlugin(), this::saveKnownUsers).schedule();
             }
         }
 
-        if (getConfig().helloMessage != null && getConfig().helloMessage.length() > 0) {
-            event.getPlayer().sendMessage(TextComponent.fromLegacyText(getConfig().helloMessage));
+        if (getConfig().hello != null && getConfig().hello.length() > 0) {
+            event.getPlayer().sendMessage(Component.text(getConfig().hello));
         }
 
         if (!hasPlayedBefore) {
-            formatAndBroadcastMessage(getConfig().welcomeMessageFormat, event.getPlayer());
-        } else if (getProxy().getOnlineCount() < getConfig().onlinePlayersLimit) {
-            formatAndBroadcastMessage(getConfig().loginMessageFormat, event.getPlayer());
+            formatAndBroadcastMessage(getConfig().login.welcomeMessage, event.getPlayer());
+        } else if (getProxy().getPlayerCount() < getConfig().login.onlinePlayersLimit) {
+            formatAndBroadcastMessage(getConfig().login.loginMessage, event.getPlayer());
         }
     }
 
-    @EventHandler
-    public void onPlayerDisconnectEvent(PlayerDisconnectEvent event) {
-        if (getProxy().getOnlineCount() < getConfig().onlinePlayersLimit) {
-            formatAndBroadcastMessage(getConfig().logoutMessageFormat, event.getPlayer());
+    @Subscribe
+    public void onPlayerDisconnectEvent(DisconnectEvent event) {
+        if (getProxy().getPlayerCount() < getConfig().login.onlinePlayersLimit) {
+            formatAndBroadcastMessage(getConfig().login.logoutMessage, event.getPlayer());
         }
     }
 
-    private void formatAndBroadcastMessage(String rawMessage, ProxiedPlayer player) {
-        BaseComponent[] messageComponents = formatText(rawMessage, player);
+    private void formatAndBroadcastMessage(String rawMessage, Player player) {
+        TextComponent messageComponent = formatText(rawMessage, player);
 
-        Collection<ProxiedPlayer> allPlayers = getProxy().getPlayers();
+        Collection<Player> allPlayers = getProxy().getAllPlayers();
         allPlayers.forEach((receiver) ->
-                receiver.sendMessage(player.getUniqueId(), messageComponents)
+                receiver.sendMessage(player, messageComponent)
         );
 
-        String discordMessage = TextComponent.toPlainText(messageComponents);
+        String discordMessage = messageComponent.content().replaceAll("§.", "");
         DiscordManager.getInstance().sendMessage(discordMessage, DiscordManager.Style.ITALIC);
     }
 
-    private BaseComponent[] formatText(String format, ProxiedPlayer player) {
+    private TextComponent formatText(String format, Player player) {
         String message = format
-                .replace("{NAME}", player.getName())
-                .replace("{DISPLAY_NAME}", player.getDisplayName());
-        return TextComponent.fromLegacyText(message);
+                //.replace("{DISPLAY_NAME}", player.getDisplayName())
+                .replace("{NAME}", player.getUsername());
+        return Component.text(message);
     }
 
     private void loadKnownUsers() {
         knownUsers.clear();
 
-        File file = new File(getPlugin().getDataFolder(), "known-users.json");
+        File file = new File(getPlugin().getDataDirectory(), "known-users.json");
         if (file.exists()) {
             try {
                 JsonObject root = new JsonParser().parse(new FileReader(file)).getAsJsonObject();
@@ -100,7 +99,7 @@ public class LoginMessageManager extends Manager implements Listener {
 
     private void saveKnownUsers() {
         synchronized (knownUsers) {
-            File file = new File(getPlugin().getDataFolder(), "known-users.json");
+            File file = new File(getPlugin().getDataDirectory(), "known-users.json");
 
             JsonArray users = new JsonArray();
             for (UUID uuid : knownUsers) {

@@ -1,13 +1,12 @@
 package eu.hiddenite.chat.managers;
 
+import com.velocitypowered.api.proxy.ProxyServer;
 import eu.hiddenite.chat.ChatPlugin;
 import eu.hiddenite.chat.Configuration;
-import net.md_5.bungee.api.ProxyServer;
-
-import java.util.logging.Logger;
+import org.slf4j.Logger;
 
 public abstract class Manager  {
-    private ChatPlugin plugin;
+    private final ChatPlugin plugin;
 
     public Manager(ChatPlugin plugin) {
         this.plugin = plugin;

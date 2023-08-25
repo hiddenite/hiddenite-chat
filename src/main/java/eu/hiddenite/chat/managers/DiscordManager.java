@@ -22,22 +22,22 @@ public class DiscordManager extends Manager {
 
     @Override
     public void onEnable() {
-        if (!getConfig().discordEnabled) {
+        if (!getConfig().discord.enabled) {
             return;
         }
 
         getLogger().info("Discord bot enabled, logging in.");
-        new DiscordApiBuilder().setToken(getConfig().discordBotToken).login().thenAccept(api -> {
-            Optional<Channel> channel = api.getChannelById(getConfig().discordChannelId);
+        new DiscordApiBuilder().setToken(getConfig().discord.botToken).login().thenAccept(api -> {
+            Optional<Channel> channel = api.getChannelById(getConfig().discord.channelId);
             if (channel.isPresent()) {
                 Optional<TextChannel> textChannel = channel.get().asTextChannel();
                 if (textChannel.isPresent()) {
                     discordTextChannel = textChannel.get();
                 } else {
-                    getLogger().warning("The specified Discord channel is not a text channel.");
+                    getLogger().warn("The specified Discord channel is not a text channel.");
                 }
             } else {
-                getLogger().warning("The specified Discord channel could not be found.");
+                getLogger().warn("The specified Discord channel could not be found.");
             }
         });
     }
@@ -66,6 +66,10 @@ public class DiscordManager extends Manager {
                 .replace("|", "\\|")
                 .replace("<", "\\<")
                 .replace(">", "\\>")
+                .replace("-", "\\-")
+                .replace("+", "\\+")
+                .replace("#", "\\#")
+                .replace(":", "\\:")
                 .replace("@", "\\@");
     }
 

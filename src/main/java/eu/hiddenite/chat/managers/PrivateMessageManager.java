@@ -1,10 +1,10 @@
 package eu.hiddenite.chat.managers;
 
+import com.velocitypowered.api.proxy.Player;
 import eu.hiddenite.chat.ChatPlugin;
 import eu.hiddenite.chat.commands.PrivateMessageCommand;
 import eu.hiddenite.chat.commands.ReplyCommand;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.kyori.adventure.text.Component;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -18,30 +18,30 @@ public class PrivateMessageManager extends Manager {
 
     @Override
     public void onEnable() {
-        getProxy().getPluginManager().registerCommand(getPlugin(), new PrivateMessageCommand(this));
-        getProxy().getPluginManager().registerCommand(getPlugin(), new ReplyCommand(this));
+        getPlugin().registerCommand("msg", new PrivateMessageCommand(this), "w", "m", "tell", "t");
+        getPlugin().registerCommand("r", new ReplyCommand(this));
     }
 
-    public void sendPrivateMessage(ProxiedPlayer sender, ProxiedPlayer receiver, String message) {
+    public void sendPrivateMessage(Player sender, Player receiver, String message) {
         lastPrivateMessages.put(receiver.getUniqueId(), sender.getUniqueId());
 
-        String senderMessage = getConfig().pmSentFormat
-                .replace("{NAME}", receiver.getName())
-                .replace("{DISPLAY_NAME}", receiver.getDisplayName())
+        String senderMessage = getConfig().privateMessages.sent
+                .replace("{NAME}", receiver.getUsername())
+                //.replace("{DISPLAY_NAME}", receiver.getDisplayName())
                 .replace("{MESSAGE}", message);
-        String receiverMessage = getConfig().pmReceivedFormat
-                .replace("{NAME}", sender.getName())
-                .replace("{DISPLAY_NAME}", sender.getDisplayName())
+        String receiverMessage = getConfig().privateMessages.received
+                .replace("{NAME}", sender.getUsername())
+                //.replace("{DISPLAY_NAME}", sender.getDisplayName())
                 .replace("{MESSAGE}", message);
 
-        sender.sendMessage(sender.getUniqueId(), TextComponent.fromLegacyText(senderMessage));
-        receiver.sendMessage(sender.getUniqueId(), TextComponent.fromLegacyText(receiverMessage));
+        sender.sendMessage(sender, Component.text(senderMessage));
+        receiver.sendMessage(sender, Component.text(receiverMessage));
     }
 
-    public ProxiedPlayer getLastPrivateMessageSender(ProxiedPlayer player) {
+    public Player getLastPrivateMessageSender(Player player) {
         UUID lastSender = lastPrivateMessages.get(player.getUniqueId());
-        if (lastSender != null) {
-            return getProxy().getPlayer(lastSender);
+        if (lastSender != null && getProxy().getPlayer(lastSender).isPresent()) {
+            return getProxy().getPlayer(lastSender).get();
         }
         return null;
     }
