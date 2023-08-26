@@ -51,7 +51,6 @@ public class PrivateMessageCommand implements SimpleCommand {
 
     @Override
     public List<String> suggest(Invocation invocation) {
-        CommandSource source = invocation.source();
         String[] args = invocation.arguments();
 
         if (args.length == 1) {

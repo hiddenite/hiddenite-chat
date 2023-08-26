@@ -1,18 +1,139 @@
 package eu.hiddenite.chat.managers;
 
+import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
-import com.velocitypowered.api.event.player.ServerPostConnectEvent;
+import com.velocitypowered.api.event.connection.LoginEvent;
+import com.velocitypowered.api.event.connection.PluginMessageEvent;
+import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.player.TabList;
+import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.player.TabListEntry;
-import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.api.util.GameProfile;
 import eu.hiddenite.chat.ChatPlugin;
-import net.kyori.adventure.text.Component;
+import eu.hiddenite.chat.Configuration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public class TabListManager extends Manager {
+    public static class TabPlayer {
+        private final TabListManager manager;
+        private final ProxyServer server;
+        private final Configuration config;
+        private final Player player;
+
+        private int lastPlayerCount = 0;
+        private final HashMap<UUID, Integer> originalGamemodes = new HashMap<>();
+
+        public TabPlayer(TabListManager manager, Player player) {
+            this.manager = manager;
+            this.server = manager.getProxy();
+            this.config = manager.getConfig();
+            this.player = player;
+        }
+
+        public void reset() {
+            this.lastPlayerCount = 0;
+        }
+
+        public void sendHeaderAndFooter() {
+            int players = server.getPlayerCount();
+
+            if (lastPlayerCount == players) {
+                // Header unchanged, nothing to do.
+                return;
+            }
+            lastPlayerCount = players;
+
+            int limit = server.getConfiguration().getShowMaxPlayers();
+
+            String header = config.globalTab.header
+                    .replace("{PLAYERS}", String.valueOf(players))
+                    .replace("{LIMIT}", String.valueOf(limit));
+            String footer = config.globalTab.footer
+                    .replace("{PLAYERS}", String.valueOf(players))
+                    .replace("{LIMIT}", String.valueOf(limit));
+
+            player.sendPlayerListHeaderAndFooter(
+                    MiniMessage.miniMessage().deserialize(header),
+                    MiniMessage.miniMessage().deserialize(footer)
+            );
+        }
+
+        public void updateEntries() {
+            int myGamemode = getMyGamemode();
+
+            for (TabListEntry entry : player.getTabList().getEntries()) {
+                Player otherPlayer = server.getPlayer(entry.getProfile().getId()).orElse(null);
+                if (otherPlayer == null) {
+                    player.getTabList().removeEntry(entry.getProfile().getId());
+                    continue;
+                }
+
+                String format = getTabFormatForPlayer(otherPlayer);
+                String displayName = format == null ? entry.getProfile().getName() : format.replace("{NAME}", entry.getProfile().getName());
+                if (manager.isAfk(otherPlayer.getUniqueId())) {
+                    displayName = config.globalTab.afkFormat.replace("{DISPLAY-NAME}", displayName);
+                }
+
+                entry.setDisplayName(MiniMessage.miniMessage().deserialize(displayName));
+
+                if (entry.getGameMode() == 3 && myGamemode != 3 && entry.getChatSession() != null) {
+                    originalGamemodes.put(entry.getProfile().getId(), entry.getGameMode());
+                    entry.setGameMode(0);
+                } else if (myGamemode == 3 && originalGamemodes.getOrDefault(entry.getProfile().getId(), 0) == 3) {
+                    originalGamemodes.remove(entry.getProfile().getId());
+                    entry.setGameMode(3);
+                }
+            }
+
+            this.createFakeEntriesForOtherServers();
+        }
+
+        private void createFakeEntriesForOtherServers() {
+            for (Player otherPlayer : server.getAllPlayers()) {
+                if (otherPlayer.getCurrentServer().equals(player.getCurrentServer())) {
+                    continue;
+                }
+                if (player.getTabList().containsEntry(otherPlayer.getUniqueId())) {
+                    continue;
+                }
+
+                GameProfile gameProfile = new GameProfile(otherPlayer.getUniqueId(), otherPlayer.getUsername(), new ArrayList<>());
+                player.getTabList().addEntry(TabListEntry.builder()
+                        .tabList(player.getTabList())
+                        .profile(gameProfile)
+                        .gameMode(3)
+                        .build()
+                );
+            }
+        }
+
+        private int getMyGamemode() {
+            TabListEntry myEntry = player.getTabList().getEntry(player.getUniqueId()).orElse(null);
+            if (myEntry != null) {
+                return myEntry.getGameMode();
+            }
+            return 0;
+        }
+
+        private String getTabFormatForPlayer(Player player) {
+            for (var entry : config.globalTab.displayNameFormats.entrySet()) {
+                if (player.hasPermission("hiddenite.chat." + entry.getKey())) {
+                    return entry.getValue();
+                }
+            }
+            return null;
+        }
+    }
+
+    private final HashMap<UUID, TabPlayer> playerTabs = new HashMap<>();
+    private final HashMap<UUID, Boolean> afkPlayers = new HashMap<>();
 
     public TabListManager(ChatPlugin plugin) {
         super(plugin);
@@ -25,148 +146,74 @@ public class TabListManager extends Manager {
         }
 
         getPlugin().registerListener(this);
+        getProxy().getChannelRegistrar().register(MinecraftChannelIdentifier.from("hiddenite:afk"));
+
+        getProxy().getScheduler()
+                .buildTask(getPlugin(), this::updateAllPlayers)
+                .repeat(500, TimeUnit.MILLISECONDS)
+                .schedule();
     }
 
-    @Subscribe
-    public void onServerPostConnect(ServerPostConnectEvent event) {
-        update();
+    @Subscribe(order = PostOrder.LATE)
+    public void onPlayerLogin(LoginEvent event) {
+        Player player = event.getPlayer();
+        playerTabs.put(player.getUniqueId(), new TabPlayer(this, player));
+        afkPlayers.remove(player.getUniqueId());
+        updatePlayer(player);
     }
 
-    @Subscribe
+    @Subscribe(order = PostOrder.LATE)
+    public void onServerConnected(ServerConnectedEvent event) {
+        Player player = event.getPlayer();
+        TabPlayer tabPlayer = playerTabs.get(player.getUniqueId());
+        if (tabPlayer != null) {
+            tabPlayer.reset();
+        }
+        updatePlayer(player);
+    }
+
+    @Subscribe(order = PostOrder.LATE)
     public void onDisconnect(DisconnectEvent event) {
-        update();
+        Player player = event.getPlayer();
+        playerTabs.remove(player.getUniqueId());
+        afkPlayers.remove(player.getUniqueId());
     }
 
-    private void update() {
-        for (Player target : getProxy().getAllPlayers()) {
-            TabList tabList = target.getTabList();
-
-            for (Player player : getProxy().getAllPlayers()) {
-                Optional<TabListEntry> optionalEntry = tabList.getEntry(player.getUniqueId());
-                TabListEntry entry = optionalEntry.orElseGet(() -> TabListEntry.builder().tabList(tabList).profile(player.getGameProfile()).build());
-
-                entry.setListed(true);
-                if (target != player) {
-                    entry.setGameMode(0);
-                }
-                entry.setDisplayName(getDisplayName(player, player.hasPermission("hiddenite.afk")));
-                entry.setLatency((int) (player.getPing() * 1000));
-
-                tabList.addEntry(entry);
-            }
-
-            for (TabListEntry entry : tabList.getEntries()) {
-                Optional<Player> optionalPlayer = getProxy().getPlayer(entry.getProfile().getId());
-                if (optionalPlayer.isEmpty()) {
-                    tabList.removeEntry(entry.getProfile().getId());
-                }
-            }
+    @Subscribe
+    public void onPluginMessage(PluginMessageEvent event) {
+        getLogger().info("plugin msg " + event.getIdentifier().getId());
+        if (!event.getIdentifier().getId().equals("hiddenite:afk")) {
+            return;
         }
-    }
+        event.setResult(PluginMessageEvent.ForwardResult.handled());
 
-    private RegisteredServer getServer(Player player) {
-        if (player.getCurrentServer().isPresent()) {
-            return player.getCurrentServer().get().getServer();
+        if (!(event.getTarget() instanceof Player player)) {
+            return;
         }
 
-        return null;
+        boolean isAfk = event.getData()[0] != 0;
+        afkPlayers.put(player.getUniqueId(), isAfk);
+        getLogger().info("afk " + player.getUsername() + " " + isAfk);
     }
 
-    private Component getDisplayName(Player player, boolean isAfk) {
-        String displayNameFormat = getDisplayNameFormat(player);
-
-        String displayName;
-        if (displayNameFormat != null) {
-            displayName = displayNameFormat.replace("{NAME}", player.getUsername());
-        } else {
-            displayName = player.getUsername();
-        }
-
-        if (isAfk) {
-            displayName = getConfig().globalTab.afkFormat.replace("{DISPLAY_NAME}", displayName);
-        }
-
-        return Component.text(displayName);
+    public boolean isAfk(UUID uniqueId) {
+        return afkPlayers.getOrDefault(uniqueId, false);
     }
 
-    private String getDisplayNameFormat(Player player) {
-        for (String key : getConfig().globalTab.displayNameFormats.keySet()) {
-            if (player.hasPermission("hiddenite.chat." + key)) {
-                return getConfig().globalTab.displayNameFormats.get(key);
-            }
-        }
-        return null;
-    }
-
-    private int getGamemode(Player player) {
-        Optional<TabListEntry> tabListEntry = player.getTabList().getEntry(player.getUniqueId());
-
-        if (tabListEntry.isPresent()) {
-            return tabListEntry.get().getGameMode();
-        }
-
-        return 0;
-    }
-
-    /*
-    private void updateHeaderAndFooter(Player player) {
-        player.sendPlayerListHeaderAndFooter(Component.text(getConfig().globalTab.header), Component.text(getConfig().globalTab.footer));
-    }
-
-    private void updateAllHeadersAndFooters() {
+    private void updateAllPlayers()  {
         for (Player player : getProxy().getAllPlayers()) {
-            updateHeaderAndFooter(player);
+            updatePlayer(player);
         }
     }
 
-    private void updateList(Player player) {
-        for (Player onlinePlayer : getProxy().getAllPlayers()) {
-            updatePlayerInList(onlinePlayer, player);
-        }
-    }
-
-    private void updatePlayerInLists(Player player) {
-        for (Player onlinePlayer : getProxy().getAllPlayers()) {
-            updatePlayerInList(player, onlinePlayer);
-        }
-    }
-
-    private void updatePlayerInList(Player player, Player target) {
-        TabList targetList = target.getTabList();
-
-        Optional<TabListEntry> optionalEntry = targetList.getEntry(player.getUniqueId());
-        if (optionalEntry.isEmpty()) {
-            targetList.addEntry(TabListEntry.builder().tabList(targetList).profile(player.getGameProfile()).build());
+    private void updatePlayer(Player player)  {
+        TabPlayer tabPlayer = playerTabs.get(player.getUniqueId());
+        if (tabPlayer == null) {
+            getLogger().warn("Tried to update the tablist of a non existing player");
+            return;
         }
 
-        TabListEntry entry = targetList.getEntry(player.getUniqueId()).get();
-
-        entry.setListed(true);
-
-        if (player != target) {
-            if (getServer(player) != getServer(target)) {
-                entry.setGameMode(3);
-            } else {
-                if (getGamemode(player) == 3 && getGamemode(target) == 3) {
-                    entry.setGameMode(3);
-                } else {
-                    entry.setGameMode(0);
-                }
-            }
-        }
-
-        entry.setDisplayName(getDisplayName(player, player.hasPermission("hiddenite.afk")));
+        tabPlayer.sendHeaderAndFooter();
+        tabPlayer.updateEntries();
     }
-
-    private void removePlayerFromLists(Player player) {
-        for (Player onlinePlayer : getProxy().getAllPlayers()) {
-            removePlayerFromList(player, onlinePlayer);
-        }
-    }
-
-    private void removePlayerFromList(Player player, Player target) {
-        target.getTabList().removeEntry(player.getUniqueId());
-    }
-    */
-
 }

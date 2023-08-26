@@ -22,7 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 
-@Plugin(id="hiddenite-chat", name="HiddeniteChat", version="1.3.0", authors={"Hiddenite"})
+@Plugin(id="hiddenite-chat", name="HiddeniteChat", version="2.0.0", authors={"Hiddenite"})
 public class ChatPlugin {
     private final ProxyServer proxy;
     private final Logger logger;

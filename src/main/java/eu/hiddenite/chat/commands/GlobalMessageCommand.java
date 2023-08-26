@@ -30,5 +30,4 @@ public class GlobalMessageCommand implements SimpleCommand {
     public boolean hasPermission(final Invocation invocation) {
         return invocation.source().hasPermission("hiddenite.chat.global-chat");
     }
-
 }

@@ -15,7 +15,6 @@ public class ReloadCommand implements SimpleCommand {
     @Override
     public void execute(final SimpleCommand.Invocation invocation) {
         CommandSource source = invocation.source();
-        String[] args = invocation.arguments();
 
         if (plugin.loadConfiguration()) {
             source.sendMessage(Component.text("Reloaded successfully."));
