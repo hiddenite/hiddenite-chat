@@ -181,7 +181,6 @@ public class TabListManager extends Manager {
 
     @Subscribe
     public void onPluginMessage(PluginMessageEvent event) {
-        getLogger().info("plugin msg " + event.getIdentifier().getId());
         if (!event.getIdentifier().getId().equals("hiddenite:afk")) {
             return;
         }
@@ -193,7 +192,6 @@ public class TabListManager extends Manager {
 
         boolean isAfk = event.getData()[0] != 0;
         afkPlayers.put(player.getUniqueId(), isAfk);
-        getLogger().info("afk " + player.getUsername() + " " + isAfk);
     }
 
     public boolean isAfk(UUID uniqueId) {
@@ -209,8 +207,9 @@ public class TabListManager extends Manager {
     private void updatePlayer(Player player)  {
         TabPlayer tabPlayer = playerTabs.get(player.getUniqueId());
         if (tabPlayer == null) {
-            getLogger().warn("Tried to update the tablist of a non existing player");
-            return;
+            getLogger().warn("Tried to update the tablist of the non existing player " + player.getUsername());
+            tabPlayer = new TabPlayer(this, player);
+            playerTabs.put(player.getUniqueId(), tabPlayer);
         }
 
         tabPlayer.sendHeaderAndFooter();
