@@ -53,6 +53,10 @@ public class LoginMessageManager extends Manager {
     @Subscribe
     public void onPlayerDisconnectEvent(DisconnectEvent event) {
         if (getProxy().getPlayerCount() < getConfig().login.onlinePlayersLimit) {
+            if (event.getPlayer().getCurrentServer().isEmpty()) {
+                return;
+            }
+
             formatAndBroadcastMessage(getConfig().login.logoutMessage, event.getPlayer());
         }
     }
