@@ -2,6 +2,7 @@ package eu.hiddenite.chat.commands;
 
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
+import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.api.proxy.Player;
 import eu.hiddenite.chat.managers.GeneralChatManager;
 
@@ -16,12 +17,16 @@ public class GlobalMessageCommand implements SimpleCommand {
     public void execute(final Invocation invocation) {
         CommandSource source = invocation.source();
         String[] args = invocation.arguments();
+        String message = String.join(" ", args);
+
+        if (source instanceof ConsoleCommandSource) {
+            manager.sendConsoleMessage(message);
+            return;
+        }
 
         if (!(source instanceof Player player)) {
             return;
         }
-
-        String message = String.join(" ", args);
 
         manager.sendGlobalMessage(player, message, false);
     }

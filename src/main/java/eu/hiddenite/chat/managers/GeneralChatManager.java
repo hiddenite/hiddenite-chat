@@ -11,6 +11,7 @@ import eu.hiddenite.chat.commands.MainMessageCommand;
 import eu.hiddenite.chat.commands.MeCommand;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,7 +56,7 @@ public class GeneralChatManager extends Manager {
         }
 
         String upperMessage = message.toUpperCase();
-        if (getConfig().blockedMessages.stream().anyMatch(upperMessage::contains)) {
+        if (getConfig().blockedMessages.stream().map(String::toUpperCase).anyMatch(upperMessage::contains)) {
             return;
         }
 
@@ -93,6 +94,10 @@ public class GeneralChatManager extends Manager {
             targetServers.add(registeredServer.getServerInfo().getName());
         }
         sendToEveryone(sender, formattedMessage, targetServers, "global");
+    }
+
+    public void sendConsoleMessage(String message) {
+        getPlugin().getProxy().sendMessage(MiniMessage.miniMessage().deserialize(message));
     }
 
     public void sendMainMessage(Player sender, String message, boolean formatted) {
