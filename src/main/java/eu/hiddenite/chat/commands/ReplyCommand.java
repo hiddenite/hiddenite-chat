@@ -4,17 +4,17 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 import eu.hiddenite.chat.Configuration;
-import eu.hiddenite.chat.managers.PrivateMessageManager;
-import net.kyori.adventure.text.Component;
+import eu.hiddenite.chat.managers.PrivateChatManager;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class ReplyCommand implements SimpleCommand {
-    private final PrivateMessageManager manager;
+    private final PrivateChatManager manager;
 
     private Configuration getConfig() {
         return manager.getConfig();
     }
 
-    public ReplyCommand(PrivateMessageManager manager) {
+    public ReplyCommand(PrivateChatManager manager) {
         this.manager = manager;
     }
     @Override
@@ -27,13 +27,20 @@ public class ReplyCommand implements SimpleCommand {
         }
 
         if (args.length < 1) {
-            sender.sendMessage(Component.text(getConfig().privateMessages.replyUsage));
+            sender.sendMessage(MiniMessage.miniMessage().deserialize(getConfig().privateChat.replyUsage));
             return;
         }
 
         Player receiver = manager.getLastPrivateMessageSender(sender);
         if (receiver == null) {
-            sender.sendMessage(Component.text(getConfig().privateMessages.errorNoReply));
+            sender.sendMessage(MiniMessage.miniMessage().deserialize(getConfig().privateChat.errorNoReply));
+            return;
+        }
+
+        if (!manager.canSendPrivateMessage(sender, receiver)) {
+            if (!getConfig().moderation.mute.errorMutedPrivate.isEmpty()) {
+                sender.sendMessage(MiniMessage.miniMessage().deserialize(getConfig().moderation.mute.errorMutedPrivate));
+            }
             return;
         }
 

@@ -154,6 +154,11 @@ public class TabListManager extends Manager {
                 .schedule();
     }
 
+    @Override
+    public void onLoad() {
+
+    }
+
     @Subscribe(order = PostOrder.LATE)
     public void onPlayerLogin(LoginEvent event) {
         Player player = event.getPlayer();

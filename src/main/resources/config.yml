@@ -1,63 +1,103 @@
 # Message sent when joining the network.
-hello: "§6Welcome to the server.\nCheck out our website: www.your-server.com"
-
-# Chat format, based on permissions.
-chat-format:
-  # "admin" and "vip" are examples, you can use anything you want instead.
-  # Chat format that requires the "hiddenite.chat.admin" permission.
-  admin: "§c<[Admin] {NAME}> §r{MESSAGE}"
-  # Chat format that requires the "hiddenite.chat.vip" permission.
-  vip: "§6<[VIP] {NAME}> §r{MESSAGE}"
-
-  # The last entry is the default chat format, used by everyone else.
-  default: "<{NAME}> {MESSAGE}"
-
-# Action format, based on permissions.
-# Works the same way as chat-format, but for the /me command instead.
-action-format:
-  admin: "§c* {NAME} §r{MESSAGE}"
-  vip: "§6* {NAME} §r{MESSAGE}"
-  default: "* {NAME} {MESSAGE}"
-
-# Messages containing the following strings won't be sent.
-blocked-messages:
-  - "I joined using ChatCraft from my Android device! Download it for free!"
+hello: "<gold>Welcome to the server.\nCheck out our website: www.your-server.com</gold>"
 
 # Messages sent to everyone when someone joins or leaves.
 login:
   # Message sent when a player joins for the first time.
-  welcome-message: "§e{NAME} §ojoined the server for the first time!"
+  welcome-message: "<italic><yellow>{NAME}</yellow> joined the server for the first time!</italic>"
   # Message sent when a player joins.
-  login-message: "§e{NAME} §ologged in."
+  login-message: "<italic><yellow>{NAME}</yellow> logged in.</italic>"
   # Message sent when a player leaves.
-  logout-message: "§e{NAME} §ologged out."
+  logout-message: "<italic><yellow>{NAME}</yellow> logged out.</italic>"
   # Player limit after which login and logout messages are no longer sent.
   # This is mostly to prevent spam on large servers. Welcome messages are unaffected.
   online-players-limit: 30
 
+# Public chat configuration
+public-chat:
+  # Chat format, based on permissions.
+  chat-format:
+    # "admin" and "vip" are examples, you can use anything you want instead.
+    # Chat format that requires the "hiddenite.chat.admin" permission.
+    admin: "<red><[Admin] {NAME}></red> {MESSAGE}"
+    # Chat format that requires the "hiddenite.chat.vip" permission.
+    vip: "<gold><[VIP] {NAME}></gold> {MESSAGE}"
+    # The last entry is the default chat format, used by everyone else.
+    default: "<{NAME}> {MESSAGE}"
+  # Action format, based on permissions.
+  # Works the same way as chat-format, but for the /me command instead.
+  action-format:
+    admin: "<red>* {NAME}</red> {MESSAGE}"
+    vip: "<gold>* {NAME}</gold> {MESSAGE}"
+    default: "* {NAME} {MESSAGE}"
+  # Servers in the same channel will have their chats connected.
+  # Chat messages sent from a server which isn't registered in a channel will not be seen by players without permissions.
+  # Adding a server in multiple channels is impossible.
+  channels:
+    main:
+      - survival
+      - creative
+    event:
+      - event
+    # This is an empty channel where no messages can be sent except with the /chat command. You can delete it if you don't want to use it.
+    staff: []
+  # Message sent when /chat channel isn't found
+  error-channel-not-found: "<red>The channel you want to send a message in has not been configured.</red>"
+
 # Private messages configuration.
-private-messages:
+private-chat:
   # Sent when the command is used without enough arguments.
   usage: "/msg <player> <message>"
   # Sent when the reply command is used with no argument.
   reply-usage: "/r <message>"
   # Message sent to the sender.
-  sent: "§7to {NAME}: {MESSAGE}"
+  sent: "<gray>to {RECEIVER}: {MESSAGE}</gray>"
   # Message sent to the receiver.
-  received: "§7from {NAME}: {MESSAGE}"
+  received: "<gray>from {SENDER}: {MESSAGE}</gray>"
+  # Message sent to players with the ability to read players' private messages.
+  spy: "<gray>from {SENDER} to {RECEIVER}: {MESSAGE}</gray>"
   # Message sent to the sender when the receiver is offline.
-  error-not-found: "§cPlayer {RECEIVER} not found."
+  error-not-found: "<red>Player {RECEIVER} not found.</red>"
   # Message sent to the sender when there is no one to reply to.
-  error-no-reply: "§cNo one to reply to."
+  error-no-reply: "<red>No one to reply to.</red>"
+
+# Moderation settings
+moderation:
+  # Messages containing the following strings won't be sent.
+  blocked-messages:
+    - "I joined using ChatCraft from my Android device! Download it for free!"
+  # Clickable URLs configuration
+  urls:
+    # If disabled, URLs that will be sent on the server won't be clickable.
+    enabled: true
+    # If enabled, only allowed URLs will be clickable.
+    restricted: false
+    # Used if URLs are restricted.
+    # Players with 'bypass' permission won't be affected by restrictions.
+    allowed-hosts:
+      - www.minecraft.net
+      - www.youtube.com
+  # Mute configuration
+  mute:
+    # If enabled, prevent players with 'hiddenite.chat.is-muted' permission from talking.
+    # Note: this plugin does not provide a /mute command.
+    enabled: false
+    # If enabled, players will be allowed to send private messages to muted players.
+    # Note: Muted players can still exchange private messages with a player if one of them has 'bypass' permission.
+    receive-private-messages: true
+    # Message sent when a player tries to send a message while being muted.
+    error-muted-public: "<red>You can't send this message because you are muted.</red>"
+    # Message sent when a player tries to send a private message to a muted player, or is muted himself.
+    error-muted-private: "<red>You can't send this message because you or the receiver is muted.</red>"
 
 # Auto-messages configuration.
 auto-messages:
-  # If enabled, the messages below will the sent automatically at a regular interval.
+  # If enabled, the messages below will be sent automatically at a regular interval.
   enabled: false
   # Interval between each message, in seconds.
   interval: 60
   # Will be added at the beginning of each message.
-  header: "§b[AutoMessage]§r "
+  header: "<aqua>[AutoMessage]</aqua> "
   # List of all messages. The message to send will be selected randomly.
   messages:
     - "We have a website and a discord server."
@@ -69,22 +109,17 @@ global-tab:
   # If enabled, a custom tab containing every player from every server will be used.
   enabled: false
   # The header and footer of the tab list.
-  header: "§aYour server\n"
-  footer: "\n§a{PLAYERS}/{LIMIT}§b players online"
+  header: "<green>Your server</green>\n"
+  footer: "\n<green>{PLAYERS}/{LIMIT}</green> <aqua>players online</aqua>"
   # How AFK players should be displayed in the list.
   afk-format: "{DISPLAY-NAME} (afk)"
   # Colors to use in the tab list, based on permissions.
   display-name-formats:
     # "admin" and "vip" are examples, you can use anything you want instead.
     # Display name that requires the "hiddenite.chat.admin" permission.
-    admin: "§c{NAME}"
+    admin: "<red>{NAME}</red>"
     # Display name that requires the "hiddenite.chat.vip" permission.
-    vip: "§6{NAME}"
-
-# Excluded servers in chat
-excluded-servers:
-  # List of all the servers with a separated chat
-  - lobby
+    vip: "<gold>{NAME}</gold>"
 
 # Discord configuration.
 discord:
@@ -92,7 +127,23 @@ discord:
   enabled: false
   # Your private bot token.
   bot-token: "..."
-  # Id of the channel where the messages should be sent.
-  channel-id: 123456
-  # Whether the discord message should show the chat name or not.
-  show-server-group: false
+  # Discord channels configuration.
+  channels:
+    - id: 0011223344
+      # A discord channel can show messages of different chat channels.
+      chat-channels:
+          # @global is a plugin channel where global messages are sent.
+          # You can also add other plugin channels like @muted or @void.
+        - "@global"
+        - main
+      # Discord channel ID can be found using the Discord developer mode and right-clicking on the channel you want.
+    - id: 5566778899
+      chat-channels:
+        - "@global"
+        - event
+    - id: 0123456789
+      chat-channels:
+          # Sends all the private messages sent between users.
+        - "@private"
+  # Whether the discord message should show more information (like the chat channel) or not.
+  detailed: false

@@ -12,6 +12,8 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import eu.hiddenite.chat.commands.*;
 import eu.hiddenite.chat.managers.*;
+import eu.hiddenite.chat.managers.PrivateChatManager;
+import eu.hiddenite.chat.managers.PublicChatManager;
 import org.slf4j.Logger;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
@@ -24,6 +26,11 @@ import java.util.ArrayList;
 
 @Plugin(id="hiddenite-chat", name="HiddeniteChat", version="2.0.0", authors={"Hiddenite"})
 public class ChatPlugin {
+    public static final String RELOAD_PERMISSION = "hiddenite.chat.reload";
+    public static final String GLOBAL_CHAT_PERMISSION = "hiddenite.chat.global-chat";
+    public static final String BYPASS_PERMISSION = "hiddenite.chat.bypass";
+    public static final String IS_MUTED_PERMISSION = "hiddenite.chat.is-muted";
+
     private final ProxyServer proxy;
     private final Logger logger;
     private final File dataDirectory;
@@ -31,6 +38,8 @@ public class ChatPlugin {
     private Configuration config = new Configuration();
 
     private final ArrayList<Manager> managers = new ArrayList<>();
+    private PublicChatManager publicChatManager;
+    private DiscordManager discordManager;
 
     @Inject
     public ChatPlugin(ProxyServer proxy, Logger logger, @DataDirectory Path dataDirectory) {
@@ -51,6 +60,7 @@ public class ChatPlugin {
         registerManagers();
         for (Manager manager : managers) {
             manager.onEnable();
+            manager.onLoad();
         }
 
         logger.info("Plugin enabled, " + managers.size() + " managers registered.");
@@ -68,8 +78,8 @@ public class ChatPlugin {
         if (!file.exists()) {
             logger.warn("No configuration file found, creating a default one.");
 
-            try (InputStream in = this.getClass().getClassLoader().getResourceAsStream("config.yml")) {
-                Files.copy(in, file.toPath());
+            try (InputStream input = this.getClass().getClassLoader().getResourceAsStream("config.yml")) {
+                Files.copy(input, file.toPath());
             } catch (IOException exception) {
                 exception.printStackTrace();
                 return false;
@@ -88,6 +98,17 @@ public class ChatPlugin {
         return true;
     }
 
+    public boolean reload() {
+        if (loadConfiguration()) {
+            for (Manager manager : managers) {
+                manager.onLoad();
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public void registerCommand(String name, Command command, String... aliases) {
         CommandManager manager = proxy.getCommandManager();
 
@@ -102,12 +123,14 @@ public class ChatPlugin {
     }
 
     private void registerManagers() {
-        managers.add(new GeneralChatManager(this));
-        managers.add(new PrivateMessageManager(this));
+        publicChatManager = new PublicChatManager(this);
+        managers.add(publicChatManager);
+        managers.add(new PrivateChatManager(this));
         managers.add(new LoginMessageManager(this));
-        managers.add(new DiscordManager(this));
-        managers.add(new TabListManager(this));
         managers.add(new AutoMessageManager(this));
+        managers.add(new TabListManager(this));
+        discordManager = new DiscordManager(this);
+        managers.add(discordManager);
     }
 
     public ProxyServer getProxy() {
@@ -125,4 +148,13 @@ public class ChatPlugin {
     public Configuration getConfig() {
         return config;
     }
+
+    public PublicChatManager getPublicChatManager() {
+        return publicChatManager;
+    }
+
+    public DiscordManager getDiscordManager() {
+        return discordManager;
+    }
+
 }

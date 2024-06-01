@@ -29,4 +29,6 @@ public abstract class Manager  {
     }
 
     public abstract void onEnable();
+
+    public abstract void onLoad();
 }

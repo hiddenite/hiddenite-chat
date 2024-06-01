@@ -16,16 +16,16 @@ public class ReloadCommand implements SimpleCommand {
     public void execute(final SimpleCommand.Invocation invocation) {
         CommandSource source = invocation.source();
 
-        if (plugin.loadConfiguration()) {
+        if (plugin.reload()) {
             source.sendMessage(Component.text("Reloaded successfully."));
         } else {
-            source.sendMessage(Component.text("Could not reload the configuration."));
+            source.sendMessage(Component.text("Could not reload the plugin."));
         }
     }
 
     @Override
     public boolean hasPermission(final SimpleCommand.Invocation invocation) {
-        return invocation.source().hasPermission("hiddenite.chat.reload");
+        return invocation.source().hasPermission(ChatPlugin.RELOAD_PERMISSION);
     }
 
 }

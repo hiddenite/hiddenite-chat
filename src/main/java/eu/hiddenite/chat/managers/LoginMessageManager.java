@@ -7,7 +7,8 @@ import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.proxy.Player;
 import eu.hiddenite.chat.ChatPlugin;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import java.io.*;
 import java.util.Collection;
@@ -27,6 +28,11 @@ public class LoginMessageManager extends Manager {
         getPlugin().registerListener(this);
     }
 
+    @Override
+    public void onLoad() {
+
+    }
+
     @Subscribe
     public void onPostLoginEvent(PostLoginEvent event) {
         boolean hasPlayedBefore = true;
@@ -39,8 +45,8 @@ public class LoginMessageManager extends Manager {
             }
         }
 
-        if (getConfig().hello != null && getConfig().hello.length() > 0) {
-            event.getPlayer().sendMessage(Component.text(getConfig().hello));
+        if (getConfig().hello != null && !getConfig().hello.isEmpty()) {
+            event.getPlayer().sendMessage(MiniMessage.miniMessage().deserialize(getConfig().hello));
         }
 
         if (!hasPlayedBefore) {
@@ -62,22 +68,22 @@ public class LoginMessageManager extends Manager {
     }
 
     private void formatAndBroadcastMessage(String rawMessage, Player player) {
-        TextComponent messageComponent = formatText(rawMessage, player);
+        Component messageComponent = formatText(rawMessage, player);
 
         Collection<Player> allPlayers = getProxy().getAllPlayers();
         allPlayers.forEach((receiver) ->
-                receiver.sendMessage(player, messageComponent)
+                receiver.sendMessage(messageComponent)
         );
 
-        String discordMessage = messageComponent.content().replaceAll("§.", "");
-        DiscordManager.getInstance().sendMessage(discordMessage, DiscordManager.Style.ITALIC);
+        String discordMessage = PlainTextComponentSerializer.plainText().serialize(messageComponent);
+        getPlugin().getDiscordManager().sendMessage(discordMessage, DiscordManager.Style.ITALIC, PublicChatManager.GLOBAL_CHANNEL);
     }
 
-    private TextComponent formatText(String format, Player player) {
+    private Component formatText(String format, Player player) {
         String message = format
                 //.replace("{DISPLAY_NAME}", player.getDisplayName())
                 .replace("{NAME}", player.getUsername());
-        return Component.text(message);
+        return MiniMessage.miniMessage().deserialize(message);
     }
 
     private void loadKnownUsers() {

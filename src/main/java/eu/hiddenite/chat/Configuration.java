@@ -8,14 +8,12 @@ import java.util.List;
 @ConfigSerializable
 public class Configuration {
     public String hello;
-    public LinkedHashMap<String, String> chatFormat;
-    public LinkedHashMap<String, String> actionFormat;
-    public List<String> blockedMessages;
     public Login login;
-    public PrivateMessages privateMessages;
+    public PublicChat publicChat;
+    public PrivateChat privateChat;
+    public Moderation moderation;
     public AutoMessages autoMessages;
     public GlobalTab globalTab;
-    public List<String> excludedServers;
     public Discord discord;
 
     @ConfigSerializable
@@ -27,13 +25,44 @@ public class Configuration {
     }
 
     @ConfigSerializable
-    public static class PrivateMessages {
+    public static class PublicChat {
+        public LinkedHashMap<String, String> chatFormat;
+        public LinkedHashMap<String, String> actionFormat;
+        public LinkedHashMap<String, List<String>> channels;
+        public String errorChannelNotFound;
+    }
+
+    @ConfigSerializable
+    public static class PrivateChat {
         public String usage;
         public String replyUsage;
         public String sent;
         public String received;
+        public String spy;
         public String errorNotFound;
         public String errorNoReply;
+    }
+
+    @ConfigSerializable
+    public static class Moderation {
+        public List<String> blockedMessages;
+        public URLs urls;
+        public Mute mute;
+
+        @ConfigSerializable
+        public static class URLs {
+            public boolean enabled;
+            public boolean restricted;
+            public List<String> allowedHosts;
+        }
+
+        @ConfigSerializable
+        public static class Mute {
+            public boolean enabled;
+            public boolean receivePrivateMessages;
+            public String errorMutedPublic;
+            public String errorMutedPrivate;
+        }
     }
 
     @ConfigSerializable
@@ -57,7 +86,13 @@ public class Configuration {
     public static class Discord {
         public boolean enabled;
         public String botToken;
-        public String channelId;
-        public boolean showServerGroup;
+        public List<Channel> channels;
+        public boolean detailed;
+
+        @ConfigSerializable
+        public static class Channel {
+            public String id;
+            public List<String> chatChannels;
+        }
     }
 }
