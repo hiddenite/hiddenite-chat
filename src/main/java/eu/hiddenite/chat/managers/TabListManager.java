@@ -13,7 +13,9 @@ import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import eu.hiddenite.chat.ChatPlugin;
 import eu.hiddenite.chat.Configuration;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,16 +54,15 @@ public class TabListManager extends Manager {
 
             int limit = server.getConfiguration().getShowMaxPlayers();
 
-            String header = config.globalTab.header
-                    .replace("{PLAYERS}", String.valueOf(players))
-                    .replace("{LIMIT}", String.valueOf(limit));
-            String footer = config.globalTab.footer
-                    .replace("{PLAYERS}", String.valueOf(players))
-                    .replace("{LIMIT}", String.valueOf(limit));
-
             player.sendPlayerListHeaderAndFooter(
-                    MiniMessage.miniMessage().deserialize(header),
-                    MiniMessage.miniMessage().deserialize(footer)
+                    MiniMessage.miniMessage().deserialize(config.globalTab.header,
+                            Placeholder.unparsed("players", String.valueOf(players)),
+                            Placeholder.unparsed("limit", String.valueOf(limit))
+                    ),
+                    MiniMessage.miniMessage().deserialize(config.globalTab.footer,
+                            Placeholder.unparsed("players", String.valueOf(players)),
+                            Placeholder.unparsed("limit", String.valueOf(limit))
+                    )
             );
         }
 
@@ -76,12 +77,15 @@ public class TabListManager extends Manager {
                 }
 
                 String format = getTabFormatForPlayer(otherPlayer);
-                String displayName = format == null ? entry.getProfile().getName() : format.replace("{NAME}", entry.getProfile().getName());
+                Component displayName = MiniMessage.miniMessage().deserialize(format == null ? entry.getProfile().getName() : format,
+                        Placeholder.unparsed("name", entry.getProfile().getName())
+                );
                 if (manager.isAfk(otherPlayer.getUniqueId())) {
-                    displayName = config.globalTab.afkFormat.replace("{DISPLAY-NAME}", displayName);
+                    displayName = MiniMessage.miniMessage().deserialize(config.globalTab.afkFormat,
+                            Placeholder.component("display-name", displayName)
+                    );
                 }
-
-                entry.setDisplayName(MiniMessage.miniMessage().deserialize(displayName));
+                entry.setDisplayName(displayName);
 
                 if (entry.getGameMode() == 3 && myGamemode != 3 && entry.getChatSession() != null) {
                     originalGamemodes.put(entry.getProfile().getId(), entry.getGameMode());
@@ -152,6 +156,11 @@ public class TabListManager extends Manager {
                 .buildTask(getPlugin(), this::updateAllPlayers)
                 .repeat(500, TimeUnit.MILLISECONDS)
                 .schedule();
+    }
+
+    @Override
+    public void onLoad() {
+
     }
 
     @Subscribe(order = PostOrder.LATE)
