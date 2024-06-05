@@ -3,8 +3,10 @@ package eu.hiddenite.chat.commands;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
+import com.velocitypowered.api.proxy.Player;
 import eu.hiddenite.chat.ChatPlugin;
 import eu.hiddenite.chat.managers.PublicChatManager;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.util.ArrayList;
@@ -24,18 +26,24 @@ public class ChatCommand implements SimpleCommand {
         String[] args = invocation.arguments();
 
         if (args.length < 2) {
+            source.sendMessage(MiniMessage.miniMessage().deserialize(manager.getConfig().publicChat.chatUsage));
             return;
         }
 
         String channel = args[0];
-        String message = String.join(" ", Arrays.stream(args).toList().subList(1, args.length));
 
         if (!manager.getConfig().publicChat.channels.containsKey(channel) && !channel.equalsIgnoreCase(PublicChatManager.GLOBAL_CHANNEL)) {
             source.sendMessage(MiniMessage.miniMessage().deserialize(manager.getConfig().publicChat.errorChannelNotFound));
             return;
         }
 
-        manager.sendMessage(source, message, channel);
+        Component message = MiniMessage.miniMessage().deserialize(String.join(" ", Arrays.stream(args).toList().subList(1, args.length)).trim());
+
+        if (source instanceof Player player) {
+            manager.sendFormattedMessage(PublicChatManager.formatMessage(player, manager.getPlugin().getPublicChatManager().getChatFormat(player), message), channel);
+        } else {
+            manager.sendFormattedMessage(message, channel);
+        }
     }
 
     @Override
@@ -53,7 +61,7 @@ public class ChatCommand implements SimpleCommand {
             String search = args[0].toUpperCase();
             List<String> matches = new ArrayList<>();
 
-            for (String channel : manager.getConfig().publicChat.channels.keySet()) {
+            for (String channel : channels) {
                 if (channel.toUpperCase().startsWith(search)) {
                     matches.add(channel);
                 }
@@ -66,7 +74,7 @@ public class ChatCommand implements SimpleCommand {
 
     @Override
     public boolean hasPermission(final SimpleCommand.Invocation invocation) {
-        return invocation.source().hasPermission(ChatPlugin.GLOBAL_CHAT_PERMISSION);
+        return invocation.source().hasPermission(ChatPlugin.SUPER_CHAT_PERMISSION);
     }
 
 }

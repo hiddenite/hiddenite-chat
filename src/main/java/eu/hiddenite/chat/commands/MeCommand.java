@@ -29,7 +29,7 @@ public class MeCommand implements SimpleCommand {
             return;
         }
 
-        if (manager.getConfig().moderation.mute.enabled && player.hasPermission(ChatPlugin.IS_MUTED_PERMISSION) && !player.hasPermission(ChatPlugin.BYPASS_PERMISSION)) {
+        if (manager.getConfig().moderation.mute.enabled && player.hasPermission(ChatPlugin.IS_MUTED_PERMISSION) && !player.hasPermission(ChatPlugin.SUPER_CHAT_PERMISSION)) {
             manager.sendActionMessage(player, message, PublicChatManager.MUTED_CHANNEL);
 
             if (!manager.getConfig().moderation.mute.errorMutedPublic.isEmpty()) {

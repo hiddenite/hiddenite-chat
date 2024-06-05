@@ -8,6 +8,7 @@ import com.velocitypowered.api.proxy.Player;
 import eu.hiddenite.chat.ChatPlugin;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import java.io.*;
@@ -68,7 +69,7 @@ public class LoginMessageManager extends Manager {
     }
 
     private void formatAndBroadcastMessage(String rawMessage, Player player) {
-        Component messageComponent = formatText(rawMessage, player);
+        Component messageComponent = MiniMessage.miniMessage().deserialize(rawMessage, Placeholder.unparsed("name", player.getUsername()));
 
         Collection<Player> allPlayers = getProxy().getAllPlayers();
         allPlayers.forEach((receiver) ->
@@ -77,13 +78,6 @@ public class LoginMessageManager extends Manager {
 
         String discordMessage = PlainTextComponentSerializer.plainText().serialize(messageComponent);
         getPlugin().getDiscordManager().sendMessage(discordMessage, DiscordManager.Style.ITALIC, PublicChatManager.GLOBAL_CHANNEL);
-    }
-
-    private Component formatText(String format, Player player) {
-        String message = format
-                //.replace("{DISPLAY_NAME}", player.getDisplayName())
-                .replace("{NAME}", player.getUsername());
-        return MiniMessage.miniMessage().deserialize(message);
     }
 
     private void loadKnownUsers() {

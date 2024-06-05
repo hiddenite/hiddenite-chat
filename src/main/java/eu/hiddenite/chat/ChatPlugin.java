@@ -27,8 +27,7 @@ import java.util.ArrayList;
 @Plugin(id="hiddenite-chat", name="HiddeniteChat", version="2.0.0", authors={"Hiddenite"})
 public class ChatPlugin {
     public static final String RELOAD_PERMISSION = "hiddenite.chat.reload";
-    public static final String GLOBAL_CHAT_PERMISSION = "hiddenite.chat.global-chat";
-    public static final String BYPASS_PERMISSION = "hiddenite.chat.bypass";
+    public static final String SUPER_CHAT_PERMISSION = "hiddenite.chat.super-chat";
     public static final String IS_MUTED_PERMISSION = "hiddenite.chat.is-muted";
 
     private final ProxyServer proxy;

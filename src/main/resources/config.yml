@@ -4,11 +4,11 @@ hello: "<gold>Welcome to the server.\nCheck out our website: www.your-server.com
 # Messages sent to everyone when someone joins or leaves.
 login:
   # Message sent when a player joins for the first time.
-  welcome-message: "<italic><yellow>{NAME}</yellow> joined the server for the first time!</italic>"
+  welcome-message: "<italic><yellow><name></yellow> joined the server for the first time!</italic>"
   # Message sent when a player joins.
-  login-message: "<italic><yellow>{NAME}</yellow> logged in.</italic>"
+  login-message: "<italic><yellow><name></yellow> logged in.</italic>"
   # Message sent when a player leaves.
-  logout-message: "<italic><yellow>{NAME}</yellow> logged out.</italic>"
+  logout-message: "<italic><yellow><name></yellow> logged out.</italic>"
   # Player limit after which login and logout messages are no longer sent.
   # This is mostly to prevent spam on large servers. Welcome messages are unaffected.
   online-players-limit: 30
@@ -19,17 +19,17 @@ public-chat:
   chat-format:
     # "admin" and "vip" are examples, you can use anything you want instead.
     # Chat format that requires the "hiddenite.chat.admin" permission.
-    admin: "<red><[Admin] {NAME}></red> {MESSAGE}"
+    admin: "<red><[Admin] <name>></red> <message>"
     # Chat format that requires the "hiddenite.chat.vip" permission.
-    vip: "<gold><[VIP] {NAME}></gold> {MESSAGE}"
+    vip: "<gold><[VIP] <name>></gold> <message>"
     # The last entry is the default chat format, used by everyone else.
-    default: "<{NAME}> {MESSAGE}"
+    default: "<<name>> <message>"
   # Action format, based on permissions.
   # Works the same way as chat-format, but for the /me command instead.
   action-format:
-    admin: "<red>* {NAME}</red> {MESSAGE}"
-    vip: "<gold>* {NAME}</gold> {MESSAGE}"
-    default: "* {NAME} {MESSAGE}"
+    admin: "<red>* <name></red> <message>"
+    vip: "<gold>* <name></gold> <message>"
+    default: "* <name> <message>"
   # Servers in the same channel will have their chats connected.
   # Chat messages sent from a server which isn't registered in a channel will not be seen by players without permissions.
   # Adding a server in multiple channels is impossible.
@@ -41,7 +41,9 @@ public-chat:
       - event
     # This is an empty channel where no messages can be sent except with the /chat command. You can delete it if you don't want to use it.
     staff: []
-  # Message sent when /chat channel isn't found
+  # Sent when /chat is incorrectly used.
+  chat-usage: "/chat <channel> <message>"
+  # Message sent when /chat channel isn't found.
   error-channel-not-found: "<red>The channel you want to send a message in has not been configured.</red>"
 
 # Private messages configuration.
@@ -51,13 +53,13 @@ private-chat:
   # Sent when the reply command is used with no argument.
   reply-usage: "/r <message>"
   # Message sent to the sender.
-  sent: "<gray>to {RECEIVER}: {MESSAGE}</gray>"
+  sent: "<gray>to <receiver>: <message></gray>"
   # Message sent to the receiver.
-  received: "<gray>from {SENDER}: {MESSAGE}</gray>"
+  received: "<gray>from <sender>: <message></gray>"
   # Message sent to players with the ability to read players' private messages.
-  spy: "<gray>from {SENDER} to {RECEIVER}: {MESSAGE}</gray>"
+  spy: "<gray>from <sender> to <receiver>: <message></gray>"
   # Message sent to the sender when the receiver is offline.
-  error-not-found: "<red>Player {RECEIVER} not found.</red>"
+  error-not-found: "<red>Player <receiver> not found.</red>"
   # Message sent to the sender when there is no one to reply to.
   error-no-reply: "<red>No one to reply to.</red>"
 
@@ -73,7 +75,7 @@ moderation:
     # If enabled, only allowed URLs will be clickable.
     restricted: false
     # Used if URLs are restricted.
-    # Players with 'bypass' permission won't be affected by restrictions.
+    # Players with 'super-chat' permission won't be affected by restrictions.
     allowed-hosts:
       - www.minecraft.net
       - www.youtube.com
@@ -83,7 +85,7 @@ moderation:
     # Note: this plugin does not provide a /mute command.
     enabled: false
     # If enabled, players will be allowed to send private messages to muted players.
-    # Note: Muted players can still exchange private messages with a player if one of them has 'bypass' permission.
+    # Note: Muted players can still exchange private messages with a player if one of them has 'super-chat' permission.
     receive-private-messages: true
     # Message sent when a player tries to send a message while being muted.
     error-muted-public: "<red>You can't send this message because you are muted.</red>"
@@ -110,16 +112,16 @@ global-tab:
   enabled: false
   # The header and footer of the tab list.
   header: "<green>Your server</green>\n"
-  footer: "\n<green>{PLAYERS}/{LIMIT}</green> <aqua>players online</aqua>"
+  footer: "\n<green><players>/<limit></green> <aqua>players online</aqua>"
   # How AFK players should be displayed in the list.
-  afk-format: "{DISPLAY-NAME} (afk)"
+  afk-format: "<display-name> (afk)"
   # Colors to use in the tab list, based on permissions.
   display-name-formats:
     # "admin" and "vip" are examples, you can use anything you want instead.
     # Display name that requires the "hiddenite.chat.admin" permission.
-    admin: "<red>{NAME}</red>"
+    admin: "<red><name></red>"
     # Display name that requires the "hiddenite.chat.vip" permission.
-    vip: "<gold>{NAME}</gold>"
+    vip: "<gold><name></gold>"
 
 # Discord configuration.
 discord:

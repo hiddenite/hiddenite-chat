@@ -7,6 +7,7 @@ import com.velocitypowered.api.proxy.Player;
 import eu.hiddenite.chat.Configuration;
 import eu.hiddenite.chat.managers.PrivateChatManager;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 import java.util.*;
 
@@ -36,8 +37,8 @@ public class PrivateMessageCommand implements SimpleCommand {
         }
 
         if (manager.getProxy().getPlayer(args[0]).isEmpty()) {
-            String errorMessage = getConfig().privateChat.errorNotFound.replace("{RECEIVER}", args[0]);
-            sender.sendMessage(MiniMessage.miniMessage().deserialize(errorMessage));
+            String errorMessage = getConfig().privateChat.errorNotFound;
+            sender.sendMessage(MiniMessage.miniMessage().deserialize(errorMessage, Placeholder.unparsed("receiver", args[0])));
             return;
         }
 

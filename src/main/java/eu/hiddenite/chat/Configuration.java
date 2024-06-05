@@ -29,6 +29,7 @@ public class Configuration {
         public LinkedHashMap<String, String> chatFormat;
         public LinkedHashMap<String, String> actionFormat;
         public LinkedHashMap<String, List<String>> channels;
+        public String chatUsage;
         public String errorChannelNotFound;
     }
 
