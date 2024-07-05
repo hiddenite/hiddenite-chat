@@ -1,9 +1,10 @@
 package eu.hiddenite.chat.managers;
 
 import com.google.gson.*;
+import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
-import com.velocitypowered.api.event.connection.PostLoginEvent;
+import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.Player;
 import eu.hiddenite.chat.ChatPlugin;
 import net.kyori.adventure.text.Component;
@@ -27,8 +28,12 @@ public class LoginMessageManager extends Manager {
         getPlugin().registerListener(this);
     }
 
-    @Subscribe
-    public void onPostLoginEvent(PostLoginEvent event) {
+    @Subscribe(order = PostOrder.LATE)
+    public void onServerConnectedEvent(ServerConnectedEvent event) {
+        if (event.getPreviousServer().isPresent()) {
+            return;
+        }
+
         boolean hasPlayedBefore = true;
         synchronized (knownUsers) {
             if (!knownUsers.contains(event.getPlayer().getUniqueId())) {
