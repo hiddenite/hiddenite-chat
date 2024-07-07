@@ -25,7 +25,7 @@ public class GeneralChatManager extends Manager {
 
     @Override
     public void onEnable() {
-        if (getConfig().chatFormat.size() == 0 || getConfig().actionFormat.size() == 0) {
+        if (getConfig().chatFormat.isEmpty() || getConfig().actionFormat.isEmpty()) {
             getLogger().warn("No chat or no action format found in the configuration.");
             return;
         }
@@ -60,7 +60,10 @@ public class GeneralChatManager extends Manager {
             return;
         }
 
-        String senderServerName = sender.getCurrentServer().get().getServerInfo().getName();
+        String senderServerName = "";
+        if (sender.getCurrentServer().isPresent()) {
+            senderServerName = sender.getCurrentServer().get().getServerInfo().getName();
+        }
 
         if (isGlobalMessage) {
             sendGlobalMessage(sender, message, false);
@@ -75,7 +78,10 @@ public class GeneralChatManager extends Manager {
         String actionFormat = getActionFormat(sender);
         String formattedMessage = formatMessage(sender, actionFormat, message);
 
-        String senderServerName = sender.getCurrentServer().get().getServerInfo().getName();
+        String senderServerName = "";
+        if (sender.getCurrentServer().isPresent()) {
+            senderServerName = sender.getCurrentServer().get().getServerInfo().getName();
+        }
         if (getConfig().excludedServers.contains(senderServerName)) {
             sendExcludedMessage(sender, formattedMessage, true);
         } else {
@@ -141,7 +147,12 @@ public class GeneralChatManager extends Manager {
 
         getLogger().info(consoleMessage);
         for (Player receiver : allPlayers) {
-            if (targetServers.contains(receiver.getCurrentServer().get().getServerInfo().getName())) {
+            String receiverServerName = "";
+            if (receiver.getCurrentServer().isPresent()) {
+                receiverServerName = receiver.getCurrentServer().get().getServerInfo().getName();
+            }
+
+            if (targetServers.contains(receiverServerName)) {
                 receiver.sendMessage(sender, messageComponent);
             } else if (receiver.hasPermission("hiddenite.chat.global-chat")) {
                 receiver.sendMessage(sender, consoleMessageComponent);
