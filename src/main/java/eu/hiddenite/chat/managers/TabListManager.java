@@ -97,6 +97,9 @@ public class TabListManager extends Manager {
 
         private void createFakeEntriesForOtherServers() {
             for (Player otherPlayer : server.getAllPlayers()) {
+                if (otherPlayer.getCurrentServer().isEmpty()) {
+                    continue;
+                }
                 if (otherPlayer.getCurrentServer().equals(player.getCurrentServer())) {
                     continue;
                 }
@@ -104,7 +107,7 @@ public class TabListManager extends Manager {
                     continue;
                 }
 
-                GameProfile gameProfile = new GameProfile(otherPlayer.getUniqueId(), otherPlayer.getUsername(), new ArrayList<>());
+                GameProfile gameProfile = new GameProfile(otherPlayer.getUniqueId(), otherPlayer.getUsername(), otherPlayer.getGameProfileProperties());
                 player.getTabList().addEntry(TabListEntry.builder()
                         .tabList(player.getTabList())
                         .profile(gameProfile)
