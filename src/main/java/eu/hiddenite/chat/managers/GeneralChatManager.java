@@ -12,6 +12,7 @@ import eu.hiddenite.chat.commands.MeCommand;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,7 +46,8 @@ public class GeneralChatManager extends Manager {
             return;
         }
 
-        event.setResult(PlayerChatEvent.ChatResult.denied());
+        // Cancelled on the server directly.
+        // event.setResult(PlayerChatEvent.ChatResult.denied());
 
         String message = event.getMessage();
 

@@ -15,7 +15,6 @@ import eu.hiddenite.chat.ChatPlugin;
 import eu.hiddenite.chat.Configuration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -172,6 +171,7 @@ public class TabListManager extends Manager {
         if (tabPlayer != null) {
             tabPlayer.reset();
         }
+        afkPlayers.remove(player.getUniqueId());
         updatePlayer(player);
     }
 

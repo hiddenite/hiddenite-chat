@@ -7,6 +7,7 @@ import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.Player;
 import eu.hiddenite.chat.ChatPlugin;
+import net.kyori.adventure.chat.SignedMessage;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 
@@ -44,7 +45,7 @@ public class LoginMessageManager extends Manager {
             }
         }
 
-        if (getConfig().hello != null && getConfig().hello.length() > 0) {
+        if (getConfig().hello != null && !getConfig().hello.isEmpty()) {
             event.getPlayer().sendMessage(Component.text(getConfig().hello));
         }
 
